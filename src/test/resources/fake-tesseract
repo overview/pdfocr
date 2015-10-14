@@ -1,0 +1,36 @@
+#!/bin/sh
+
+# Tesseract binary used for testing.
+#
+# Spits out its invocation to stderr, then spits out its input to stdout.
+#
+# Special language values ($4) cause special results:
+#
+# * "zxx": retval 1, missing-language warning to stderr
+# * "osd": retval 0, missing-language warning to stderr
+# * "und": retval 1, other error message
+
+
+case "$4" in
+  osd)
+    # Put dummy data above and below the language message we grep for
+    echo "blah" >&2
+    echo "Failed loading language 'osd'" >&2
+    echo "blah" >&2
+    exec cat # When Tesseract is missing "osd", it continues
+    ;;
+  zxx)
+    echo "blah" >&2
+    echo "Failed loading language 'zxx'" >&2
+    echo "blah" >&2
+    exit 1
+    ;;
+  und)
+    echo "An error message" >&2
+    exit 1
+    ;;
+  *)
+    echo "$*" >&2
+    exec cat
+    ;;
+esac
