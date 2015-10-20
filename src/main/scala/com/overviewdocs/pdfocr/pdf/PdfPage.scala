@@ -112,7 +112,6 @@ class PdfPage(val pdfDocument: PdfDocument, val pdPage: PDPage, val pageNumber: 
 
   private class HocrHandler(stream: PDPageContentStream, cropBox: Rectangle, dpi: Int) extends DefaultHandler2 {
     val buf: StringBuilder = new StringBuilder
-    var bold: Boolean = false
     var boundingBox: Option[Rectangle] = None
 
     // If we don't implement this, Xerces will download from the Web....
@@ -137,15 +136,11 @@ class PdfPage(val pdfDocument: PdfDocument, val pdPage: PDPage, val pageNumber: 
 
     override def endElement(uri: String, localName: String, qName: String): Unit = {
       qName match {
-        case "strong" => {
-          bold = true
-        }
         case "span" => {
           val text = buf.toString.trim
           if (text.nonEmpty) {
             renderText(text)
           }
-          bold = false
           buf.delete(0, buf.length)
         }
         case _ => {}
