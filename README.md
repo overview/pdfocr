@@ -76,3 +76,6 @@ After that,
 3. Edit files in `src/main` until the test passes.
 4. Return to step 2.
 5. Commit to a git branch, push it to GitHub, and submit a pull request.
+
+This software is Copyright 2011-2014 The Associated Press, and distributed under the
+terms of the GNU Affero General Public License. See the LICENSE file for details.
