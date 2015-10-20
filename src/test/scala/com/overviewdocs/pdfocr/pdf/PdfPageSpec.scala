@@ -33,7 +33,7 @@ class PdfPageSpec extends UnitSpec {
     pdDocument.addPage(pdPage)
     val stream = new PDPageContentStream(pdDocument, pdPage)
     stream.beginText
-    stream.setFont(PDType1Font.HELVETICA, 18)
+    stream.setFont(PDType1Font.HELVETICA, 12)
     stream.moveTextPositionByAmount(1, 1)
     stream.drawString("Hello, world!")
     stream.endText
