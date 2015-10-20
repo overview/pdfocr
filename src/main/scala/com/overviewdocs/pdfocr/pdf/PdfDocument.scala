@@ -1,11 +1,11 @@
 package com.overviewdocs.pdfocr.pdf
 
-import java.io.IOException
+import java.io.{FileNotFoundException,IOException}
 import java.nio.file.{Files,Path}
-import org.apache.pdfbox.exceptions.CryptographyException
-import org.apache.pdfbox.io.RandomAccessFile
-import org.apache.pdfbox.pdfparser.NonSequentialPDFParser
+import org.apache.pdfbox.io.{MemoryUsageSetting,ScratchFile}
+import org.apache.pdfbox.pdfparser.PDFParser
 import org.apache.pdfbox.pdmodel.{PDDocument,PDPage}
+import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException
 import scala.concurrent.{ExecutionContext,Future,blocking}
 
 import com.overviewdocs.pdfocr.exceptions._
@@ -22,10 +22,6 @@ class PdfDocument(
   val path: Path,
   val pdDocument: PDDocument
 )(implicit ec: ExecutionContext) {
-  private val jPages: java.lang.Iterable[_] = {
-    pdDocument.getDocumentCatalog.getAllPages
-  }
-
   /** Releases resources associated with this document.
     *
     * You must call this method when you're done with the object.
@@ -36,7 +32,7 @@ class PdfDocument(
     *
     * This method will <em>not</em> block or throw an exception.
     */
-  def nPages: Int = pdDocument.getNumberOfPages
+  val nPages: Int = pdDocument.getNumberOfPages
 
   /** Iterates over the pages of the document.
     *
@@ -57,39 +53,41 @@ class PdfDocument(
     *     val pageTexts: Seq[String] = step(Seq())
     *       .recover { case ex: PdfInvalidException =&gt; ... }
     */
-  def pages: Iterator[Future[PdfPage]] = {
-    val jIterator = jPages.iterator
-    val parent = this // self-contained inner object
-    val executionContext = ec
-
-    new Iterator[Future[PdfPage]] {
-      var nextPageNumber: Int = 0
-
-      override def hasNext: Boolean = jIterator.hasNext
-      override def next: Future[PdfPage] = {
-        Future {
-          val pdPage: PDPage = try {
-            jIterator.next.asInstanceOf[PDPage]
-          } catch {
-            case ex: NullPointerException => {
-              throw new PdfInvalidException(parent.path.toString, ex)
-            }
-            case ex: Exception => {
-              ex.printStackTrace
-              System.out.println("HERE HERE HERE")
-              throw ex
-            }
-          }
-          val pageNumber = nextPageNumber
-          nextPageNumber += 1
-          new PdfPage(parent, pdPage, pageNumber)
-        }(ec)
-      }
-    }
-  }
+  def pages: Iterator[Future[PdfPage]] = new PdfDocument.PdfPageIterator(this)(ec)
 }
 
 object PdfDocument {
+  private val PdfParserMainMemoryBytes = 50 * 1024 * 1024;
+
+  private class PdfPageIterator(pdfDocument: PdfDocument)(implicit ec: ExecutionContext)
+  extends Iterator[Future[PdfPage]] {
+    var nextPageNumber = 0
+
+    override def hasNext: Boolean = nextPageNumber < pdfDocument.nPages
+
+    override def next: Future[PdfPage] = {
+      Future(blocking {
+        val pageNumber = nextPageNumber
+        nextPageNumber += 1
+
+        val pdPage: PDPage = try {
+          pdfDocument.pdDocument.getPage(pageNumber)
+        } catch {
+          case ex: NullPointerException => {
+            throw new PdfInvalidException(pdfDocument.path.toString, ex)
+          }
+          case ex: Exception => {
+            ex.printStackTrace
+            System.out.println("HERE HERE HERE")
+            throw ex
+          }
+        }
+
+        new PdfPage(pdfDocument, pdPage, pageNumber)
+      })(ec)
+    }
+  }
+
   /** Opens and returns a PDF document.
     *
     * The return value may be a failed Future:
@@ -101,30 +99,24 @@ object PdfDocument {
     * Otherwise, the return value will be valid ... but any page in the `pages`
     * iterator may still return a failed Future.
     *
-    * Performance note: PDFBox 1.8.10 parses the entire document here, which
-    * can take a long time and eat a lot of memory. PDFBox 2.0.0 will solve
-    * these issues; once we upgrade, the page iterator will become slower and
-    * this method will become faster. (We'll avoid most memory issues, too.)
+    * This will only parse enough of the document to figure out how many pages
+    * there are. The pages method will parse the rest.
+    * 
+    * Be sure close the returned PdfDocument.
     */
   def load(path: Path)(implicit ec: ExecutionContext): Future[PdfDocument] = Future(blocking {
-    val tempfile = Files.createTempFile("pdfocr", "parser-RandomAccess.tmp")
-    val randomAccess = new RandomAccessFile(tempfile.toFile, "rw")
-    Files.delete(tempfile)
-
-    val parser = new NonSequentialPDFParser(path.toFile, randomAccess)
+    val memoryUsageSetting = MemoryUsageSetting.setupMixed(PdfParserMainMemoryBytes)
 
     // Read enough of the document to produce an error if it isn't a PDF
-    try {
-      parser.parse
+    val pdDocument: PDDocument = try {
+      PDDocument.load(path.toFile, memoryUsageSetting) // Only reads trailer+xref
     } catch {
-      case ex: IOException if ex.getMessage.substring(0, 30) == "Error (CryptographyException) " => {
-        throw new PdfEncryptedException(path.toString, ex)
-      }
-      case ex: IOException => {
-        throw new PdfInvalidException(path.toString, ex)
-      }
+      case ex: InvalidPasswordException => throw new PdfEncryptedException(path.toString, ex)
+      case ex: FileNotFoundException => throw ex
+      case ex: SecurityException => throw ex
+      case ex: IOException => throw new PdfInvalidException(path.toString, ex)
     }
 
-    new PdfDocument(path, parser.getPDDocument)
+    new PdfDocument(path, pdDocument)
   })
 }

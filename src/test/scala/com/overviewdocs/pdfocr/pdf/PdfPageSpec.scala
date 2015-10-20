@@ -1,9 +1,8 @@
 package com.overviewdocs.pdfocr.pdf
 
 import java.nio.file.Paths
-import org.apache.pdfbox.pdmodel.{PDDocument,PDPage}
+import org.apache.pdfbox.pdmodel.{PDDocument,PDPage,PDPageContentStream}
 import org.apache.pdfbox.pdmodel.common.PDRectangle
-import org.apache.pdfbox.pdmodel.edit.PDPageContentStream
 import org.apache.pdfbox.pdmodel.font.PDType1Font
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -34,8 +33,7 @@ class PdfPageSpec extends UnitSpec {
     val stream = new PDPageContentStream(pdDocument, pdPage)
     stream.beginText
     stream.setFont(PDType1Font.HELVETICA, 12)
-    stream.moveTextPositionByAmount(1, 1)
-    stream.drawString("Hello, world!")
+    stream.showText("Hello, world!")
     stream.endText
     stream.close
     (pdfDocument, new PdfPage(pdfDocument, pdPage, 0))
@@ -62,11 +60,11 @@ class PdfPageSpec extends UnitSpec {
       }
     }
 
-    it("should return an empty string when a content stream is invalid") {
+    it("should throw PdfInvalidException") {
       val (document, page) = loadInvalidStreamPage
 
       try {
-        page.toText must equal("\n")
+        a [PdfInvalidException] must be thrownBy(page.toText)
       } finally {
         document.close
       }
@@ -113,13 +111,11 @@ class PdfPageSpec extends UnitSpec {
       }
     }
 
-    it("should return a blank image when a content stream is invalid") {
+    it("should throw a PdfInvalidException") {
       val (document, page) = loadInvalidStreamPage
 
       try {
-        val image = page.toImage
-        image.getWidth must equal(1)
-        image.getHeight must equal(1)
+        a [PdfInvalidException] must be thrownBy(page.toImage)
       } finally {
         document.close
       }

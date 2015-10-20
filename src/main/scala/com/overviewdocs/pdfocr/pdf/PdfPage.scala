@@ -5,11 +5,12 @@ import java.awt.geom.AffineTransform
 import java.awt.image.BufferedImage
 import java.io.{IOException,StringReader}
 import java.util.regex.Pattern
-import org.apache.pdfbox.pdmodel.{PDDocument,PDPage}
+import org.apache.pdfbox.pdmodel.{PDDocument,PDPage,PDPageContentStream}
 import org.apache.pdfbox.pdmodel.common.PDRectangle
-import org.apache.pdfbox.pdmodel.edit.PDPageContentStream
 import org.apache.pdfbox.pdmodel.font.PDType1Font
-import org.apache.pdfbox.util.PDFTextStripper
+import org.apache.pdfbox.rendering.{ImageType,PDFRenderer}
+import org.apache.pdfbox.text.PDFTextStripper
+import org.apache.pdfbox.util.Matrix
 import org.xml.sax.{Attributes,ContentHandler,InputSource,SAXException,SAXParseException}
 import org.xml.sax.ext.DefaultHandler2
 import org.xml.sax.helpers.XMLReaderFactory
@@ -23,6 +24,10 @@ import com.overviewdocs.pdfocr.exceptions.PdfInvalidException
   *
   * A PdfPage will only be valid so long as its parent PdfDocument's `close`
   * method has not been called.
+  *
+  * @param pdfDocument A PdfDocument
+  * @param pdPage A PDPage (PDFBox internal representation)
+  * @param pageNumber 0-based page index
   */
 class PdfPage(val pdfDocument: PdfDocument, val pdPage: PDPage, val pageNumber: Int) {
   private val OcrTextSize: Int = 12 // always
@@ -31,11 +36,17 @@ class PdfPage(val pdfDocument: PdfDocument, val pdPage: PDPage, val pageNumber: 
   private val MaxResolution: Int = 4000
 
   /** Returns all the text we can read from the document. */
+  @throws(classOf[PdfInvalidException])
   def toText: String = {
     val stripper = new PDFTextStripper
     stripper.setStartPage(pageNumber + 1)
     stripper.setEndPage(pageNumber + 1)
-    stripper.getText(pdfDocument.pdDocument)
+
+    try {
+      stripper.getText(pdfDocument.pdDocument)
+    } catch {
+      case ex: NullPointerException => throw new PdfInvalidException(pdfDocument.path.toString, ex)
+    }
   }
 
   /** Returns how many dots-per-inch we should render an image.
@@ -49,7 +60,7 @@ class PdfPage(val pdfDocument: PdfDocument, val pdPage: PDPage, val pageNumber: 
   private def bestDpi: Int = {
     var dpi = ImageDpi
 
-    Option(pdPage.findMediaBox) match {
+    Option(pdPage.getMediaBox) match {
       case Some(rect) => {
         var dpi = ImageDpi
 
@@ -67,8 +78,15 @@ class PdfPage(val pdfDocument: PdfDocument, val pdPage: PDPage, val pageNumber: 
   }
 
   /** Renders the page to an image. */
+  @throws(classOf[PdfInvalidException])
   def toImage: BufferedImage = {
-    pdPage.convertToImage(BufferedImage.TYPE_BYTE_GRAY, bestDpi)
+    val renderer = new PDFRenderer(pdfDocument.pdDocument)
+
+    try {
+      renderer.renderImageWithDPI(pageNumber, bestDpi, ImageType.GRAY)
+    } catch {
+      case ex: NullPointerException => throw new PdfInvalidException(pdfDocument.path.toString, ex)
+    }
   }
 
   /** Uses hOCR data to add invisible text to the page.
@@ -91,7 +109,7 @@ class PdfPage(val pdfDocument: PdfDocument, val pdPage: PDPage, val pageNumber: 
     val hocrReader = new StringReader(hocrString)
     val inputSource = new InputSource(hocrReader)
     val pageContentStream = new PDPageContentStream(pdfDocument.pdDocument, pdPage, true, true, true)
-    val handler = new HocrHandler(pageContentStream, pdPage.findCropBox.toRectangle, bestDpi)
+    val handler = new HocrHandler(pageContentStream, pdPage.getCropBox.toRectangle, bestDpi)
     try {
       val xmlReader = XMLReaderFactory.createXMLReader()
       xmlReader.setContentHandler(handler)
@@ -188,11 +206,11 @@ class PdfPage(val pdfDocument: PdfDocument, val pdPage: PDPage, val pageNumber: 
           val transform = new AffineTransform
           transform.scale(scaleX, scaleY)
           transform.translate(topLeftX / scaleX, baselineY / scaleY)
-          stream.setTextMatrix(transform)
+          stream.setTextMatrix(new Matrix(transform))
           System.out.println(s"Print `$text` at `$transform`")
 
           stream.setFont(PDType1Font.HELVETICA, fontSize.toFloat)
-          stream.drawString(text)
+          stream.showText(text)
           stream.endText
         }
         case _ => throw new Exception(s"pdfocr error: no bbox for text `$text`")
