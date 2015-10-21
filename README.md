@@ -63,6 +63,8 @@ How PdfOcr behaves
 * PdfOcr sends Tesseract any page that's missing fonts or missing 100 characters of text.
 * PdfOcr's progress reports are page-by-page. If one page needs OCR and nine don't, the progress report will be unintuitive.
 * PdfOcr communicates with Tesseract via stdin and stdout.
+* For any method that will block on I/O, PdfOcr returns a Future. In other words: blocking methods are asynchronous.
+* PdfOcr does heavy computations (especially in `PdfPage`) which are slow. These are non-blocking and synchronous.
 
 Developing
 ----------

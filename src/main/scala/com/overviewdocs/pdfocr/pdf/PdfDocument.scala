@@ -2,7 +2,7 @@ package com.overviewdocs.pdfocr.pdf
 
 import java.io.{FileNotFoundException,IOException}
 import java.nio.file.{Files,Path}
-import org.apache.pdfbox.io.{MemoryUsageSetting,ScratchFile}
+import org.apache.pdfbox.io.MemoryUsageSetting
 import org.apache.pdfbox.pdfparser.PDFParser
 import org.apache.pdfbox.pdmodel.{PDDocument,PDPage}
 import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException

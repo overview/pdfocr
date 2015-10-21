@@ -3,13 +3,18 @@ package com.overviewdocs.pdfocr.pdf
 import java.awt.Rectangle
 import java.awt.geom.AffineTransform
 import java.awt.image.BufferedImage
-import java.io.ByteArrayInputStream
+import java.io.{ByteArrayInputStream,ByteArrayOutputStream}
 import org.apache.pdfbox.pdmodel.{PDDocument,PDPage,PDPageContentStream}
 import org.apache.pdfbox.pdmodel.common.PDRectangle
 import org.apache.pdfbox.pdmodel.font.PDType0Font
+import org.apache.pdfbox.pdmodel.interactive.action.PDActionGoTo
+import org.apache.pdfbox.pdmodel.interactive.annotation.{PDAnnotation,PDAnnotationLink}
+import org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.{PDDestination,PDPageDestination}
+import org.apache.pdfbox.io.MemoryUsageSetting
 import org.apache.pdfbox.rendering.{ImageType,PDFRenderer}
 import org.apache.pdfbox.text.PDFTextStripper
 import org.apache.pdfbox.util.Matrix
+import scala.collection.JavaConversions.iterableAsScalaIterable
 
 import com.overviewdocs.pdfocr.exceptions.PdfInvalidException
 
@@ -25,8 +30,6 @@ import com.overviewdocs.pdfocr.exceptions.PdfInvalidException
   * @param pageNumber 0-based page index
   */
 class PdfPage(val pdfDocument: PdfDocument, val pdPage: PDPage, val pageNumber: Int) {
-  private val OcrTextSize: Int = 12     // always. Arbitrary.
-  private val PdfDpi: Int = 72          // always. Part of the PDF spec.
   private val ImageDpi: Int = 300       // What we send to Tesseract. Arbitrary.
   private val MaxResolution: Int = 4000 // To ensure Tesseract finishes promptly. Picked by trying a few.
   private val pdDocument: PDDocument = pdfDocument.pdDocument
@@ -60,11 +63,11 @@ class PdfPage(val pdfDocument: PdfDocument, val pdPage: PDPage, val pageNumber: 
       case Some(rect) => {
         var dpi = ImageDpi
 
-        if (rect.getWidth * dpi / PdfDpi > MaxResolution) {
-          dpi = MaxResolution * PdfDpi / rect.getWidth.toInt
+        if (rect.getWidth * dpi / PdfPage.PdfDpi > MaxResolution) {
+          dpi = MaxResolution * PdfPage.PdfDpi / rect.getWidth.toInt
         }
-        if (rect.getHeight * dpi / PdfDpi > MaxResolution) {
-          dpi = MaxResolution * PdfDpi / rect.getHeight.toInt
+        if (rect.getHeight * dpi / PdfPage.PdfDpi > MaxResolution) {
+          dpi = MaxResolution * PdfPage.PdfDpi / rect.getHeight.toInt
         }
 
         dpi
@@ -95,12 +98,57 @@ class PdfPage(val pdfDocument: PdfDocument, val pdPage: PDPage, val pageNumber: 
     val input = new ByteArrayInputStream(hocr)
     val parser = new HocrParser(input)
 
-    val handler = new HocrHandler(this)
+    val handler = new PdfPage.HocrHandler(this)
 
     parser.foreach(handler.renderLine)
 
     handler.close
   }
+
+  /** Returns a one-page PDF, as a byte array.
+    *
+    * Even if the original `pdDocument` is a single page, this method will
+    * return a whole new page. (That's so we can avoid blocking re-reading the
+    * original input file.)
+    */
+  def toPdf: Array[Byte] = {
+    // Mostly copied from pdfbox/.../multipdf/Splitter.java, but without the
+    // horrendous API.
+    val newDocument = new PDDocument(MemoryUsageSetting.setupMainMemoryOnly)
+    newDocument.getDocument.setVersion(pdDocument.getVersion)
+    newDocument.setDocumentInformation(pdDocument.getDocumentInformation)
+    newDocument.getDocumentCatalog.setViewerPreferences(pdDocument.getDocumentCatalog.getViewerPreferences)
+    val newPage = newDocument.importPage(pdPage)
+    newPage.setCropBox(pdPage.getCropBox)
+    newPage.setMediaBox(pdPage.getMediaBox)
+    newPage.setResources(pdPage.getResources) // only the resources of the page will be copied
+    newPage.setRotation(pdPage.getRotation)
+
+    // Remove links to pages, to avoid copying resources
+    // todo from pdfbox: preserve links to this page
+    iterableAsScalaIterable(newPage.getAnnotations).foreach { annotation =>
+      annotation.setPage(null)
+      annotation match { case link: PDAnnotationLink => {
+        Option(link.getDestination).foreach(nixPage)
+        link.getAction match {
+          case goAction: PDActionGoTo => Option(goAction.getDestination).foreach(nixPage)
+        }
+      }}
+    }
+
+    val outputStream = new ByteArrayOutputStream
+    newDocument.save(outputStream)
+    outputStream.toByteArray
+  }
+
+  private def nixPage(destination: PDDestination): Unit = destination match {
+    case pageDestination: PDPageDestination => pageDestination.setPage(null)
+    case _ =>
+  }
+}
+
+object PdfPage {
+  private val PdfDpi: Int = 72          // always. Part of the PDF spec.
 
   private class HocrHandler(pdfPage: PdfPage) {
     private def pdRectangleToRectangle(pdRectangle: PDRectangle) = new Rectangle(

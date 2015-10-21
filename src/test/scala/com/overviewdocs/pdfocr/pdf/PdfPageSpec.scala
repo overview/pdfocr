@@ -121,4 +121,34 @@ class PdfPageSpec extends UnitSpec {
       }
     }
   }
+
+  describe("toPdf") {
+    it("should return") {
+      val pdf = load("2-pages.pdf").futureValue
+
+      val page = pdf.pages.next.futureValue
+
+      val bytes = page.toPdf
+
+      bytes.length must equal(783) // Figured out by running the test
+      // Presumably, if this test fails you're editing the toPdf method to add
+      // more stringent requirements. You should edit or nix this test when you
+      // do.
+
+      new String(bytes, "utf-8") must include("/BaseFont /Helvetica")
+
+      pdf.close
+    }
+
+    it("should copy an invalid stream") {
+      val (document, page) = loadInvalidStreamPage
+
+      val bytes = page.toPdf
+      bytes.length must equal(783) // Figured out by running the test
+
+      document.close
+    }
+
+    // todo figure out whether there's a way to throw a PdfInvalidException
+  }
 }
