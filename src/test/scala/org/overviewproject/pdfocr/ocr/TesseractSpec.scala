@@ -13,6 +13,8 @@ class TesseractSpec extends UnitSpec {
   val tesseract: Tesseract = new Tesseract(tesseractOptions)
   val image: BufferedImage = new BufferedImage(10, 10, BufferedImage.TYPE_BYTE_GRAY)
 
+  new java.io.File(tesseractPath).setExecutable(true) // because sbt's copying nixes the executable bit
+
   it("shells to Tesseract and collects stderr") {
     val result = tesseract.ocr(image, Seq(new Locale("en"))).futureValue
     new String(result.standardError, "utf-8") must equal("- - -l eng -psm 1 hocr\n")
