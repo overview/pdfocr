@@ -1,4 +1,4 @@
-package com.overviewdocs.pdfocr.pdf
+package org.overviewproject.pdfocr.pdf
 
 import java.io.{FileNotFoundException,IOException}
 import java.nio.file.{Files,Path}
@@ -8,7 +8,7 @@ import org.apache.pdfbox.pdmodel.{PDDocument,PDPage}
 import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException
 import scala.concurrent.{ExecutionContext,Future,blocking}
 
-import com.overviewdocs.pdfocr.exceptions._
+import org.overviewproject.pdfocr.exceptions._
 
 /** A PDF document.
   *

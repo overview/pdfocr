@@ -1,6 +1,6 @@
-package com.overviewdocs.pdfocr.ocr
+package org.overviewproject.pdfocr.ocr
 
-import com.overviewdocs.pdfocr.exceptions.PdfOcrException
+import org.overviewproject.pdfocr.exceptions.PdfOcrException
 
 /** The successful result of invoking Tesseract and piping an image to stdin.
   *

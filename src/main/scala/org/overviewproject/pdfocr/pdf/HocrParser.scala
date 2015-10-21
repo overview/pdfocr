@@ -1,4 +1,4 @@
-package com.overviewdocs.pdfocr.pdf
+package org.overviewproject.pdfocr.pdf
 
 import java.awt.Rectangle
 import java.io.{InputStream,StringReader}

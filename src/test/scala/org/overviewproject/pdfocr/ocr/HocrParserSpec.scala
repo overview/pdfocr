@@ -1,9 +1,9 @@
-package com.overviewdocs.pdfocr.pdf
+package org.overviewproject.pdfocr.pdf
 
 import java.awt.Rectangle
 import java.io.{ByteArrayInputStream,InputStream}
 
-import com.overviewdocs.pdfocr.test.UnitSpec
+import org.overviewproject.pdfocr.test.UnitSpec
 
 class HocrParserSpec extends UnitSpec {
   // Simple HTML-generating functions. They don't escape anything, so be nice.

@@ -1,11 +1,11 @@
-package com.overviewdocs.pdfocr.ocr
+package org.overviewproject.pdfocr.ocr
 
 import java.awt.image.BufferedImage
 import java.util.Locale
 import scala.concurrent.ExecutionContext.Implicits.global
 
-import com.overviewdocs.pdfocr.test.UnitSpec
-import com.overviewdocs.pdfocr.exceptions._
+import org.overviewproject.pdfocr.test.UnitSpec
+import org.overviewproject.pdfocr.exceptions._
 
 class TesseractSpec extends UnitSpec {
   val tesseractPath: String = getClass.getResource("/fake-tesseract").toString.replace("file:", "")

@@ -13,8 +13,8 @@ Usage
 
 You've got to use Scala. Code something like this:
 
-    import com.overviewdocs.pdfocr.{PdfOcr,PdfOcrProgress,PdfOcrResult}
-    import com.overviewdocs.pdfocr.exceptions._
+    import org.overviewproject.pdfocr.{PdfOcr,PdfOcrProgress,PdfOcrResult}
+    import org.overviewproject.pdfocr.exceptions._
     import java.nio.file.Path
     import java.util.Locale
     import scala.concurrent.Future

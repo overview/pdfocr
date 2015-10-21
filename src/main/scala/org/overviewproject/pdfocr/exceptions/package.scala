@@ -1,4 +1,4 @@
-package com.overviewdocs.pdfocr
+package org.overviewproject.pdfocr
 
 package object exceptions {
   sealed abstract class PdfOcrException(message: String, cause: Exception) extends Exception(message, cause)

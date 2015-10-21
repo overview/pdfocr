@@ -1,12 +1,12 @@
-package com.overviewdocs.pdfocr
+package org.overviewproject.pdfocr
 
 import java.nio.file.Paths
 import java.util.Locale
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-import com.overviewdocs.pdfocr.pdf.{PdfDocument,PdfPage}
-import com.overviewdocs.pdfocr.ocr.{Tesseract,TesseractOptions}
+import org.overviewproject.pdfocr.pdf.{PdfDocument,PdfPage}
+import org.overviewproject.pdfocr.ocr.{Tesseract,TesseractOptions}
 
 object Main {
   lazy val tesseract = new Tesseract(TesseractOptions())

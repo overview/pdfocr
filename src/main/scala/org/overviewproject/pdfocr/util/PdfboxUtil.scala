@@ -1,4 +1,4 @@
-//package com.overviewdocs.pdfocr.util
+//package org.overviewproject.pdfocr.util
 //
 //import org.apache.pdfbox.io.RandomAccessFile
 //import org.apache.pdfbox.model.PDDocument

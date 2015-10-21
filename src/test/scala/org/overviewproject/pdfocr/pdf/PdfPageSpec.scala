@@ -1,4 +1,4 @@
-package com.overviewdocs.pdfocr.pdf
+package org.overviewproject.pdfocr.pdf
 
 import java.nio.file.Paths
 import org.apache.pdfbox.pdmodel.{PDDocument,PDPage,PDPageContentStream}
@@ -7,8 +7,8 @@ import org.apache.pdfbox.pdmodel.font.PDType1Font
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-import com.overviewdocs.pdfocr.exceptions.PdfInvalidException
-import com.overviewdocs.pdfocr.test.UnitSpec
+import org.overviewproject.pdfocr.exceptions.PdfInvalidException
+import org.overviewproject.pdfocr.test.UnitSpec
 
 class PdfPageSpec extends UnitSpec {
   /** Loads a PDF document from the "trivial-pdfs" folder. */

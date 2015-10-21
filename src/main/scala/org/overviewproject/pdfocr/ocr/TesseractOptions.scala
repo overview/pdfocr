@@ -1,4 +1,4 @@
-package com.overviewdocs.pdfocr.ocr
+package org.overviewproject.pdfocr.ocr
 
 case class TesseractOptions(
   tesseractPath: String = "tesseract"

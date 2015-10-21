@@ -1,4 +1,4 @@
-package com.overviewdocs.pdfocr.ocr
+package org.overviewproject.pdfocr.ocr
 
 import java.awt.image.BufferedImage
 import java.io.{ByteArrayOutputStream,IOException,InputStream,OutputStream}
@@ -8,7 +8,7 @@ import javax.imageio.ImageIO
 import javax.imageio.stream.MemoryCacheImageOutputStream
 import scala.concurrent.{ExecutionContext,Future,blocking}
 
-import com.overviewdocs.pdfocr.exceptions._
+import org.overviewproject.pdfocr.exceptions._
 
 class Tesseract(val options: TesseractOptions) {
   private val BufferSize = 8192 // inspired by OpenJDK's Files.copy()

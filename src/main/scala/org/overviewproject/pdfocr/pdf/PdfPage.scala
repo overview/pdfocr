@@ -1,4 +1,4 @@
-package com.overviewdocs.pdfocr.pdf
+package org.overviewproject.pdfocr.pdf
 
 import java.awt.Rectangle
 import java.awt.geom.AffineTransform
@@ -16,7 +16,7 @@ import org.apache.pdfbox.text.PDFTextStripper
 import org.apache.pdfbox.util.Matrix
 import scala.collection.JavaConversions.iterableAsScalaIterable
 
-import com.overviewdocs.pdfocr.exceptions.PdfInvalidException
+import org.overviewproject.pdfocr.exceptions.PdfInvalidException
 
 /** A page of a PDF document.
   *

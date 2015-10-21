@@ -1,4 +1,4 @@
-package com.overviewdocs.pdfocr.pdf
+package org.overviewproject.pdfocr.pdf
 
 import java.awt.image.BufferedImage
 import java.io.IOException
@@ -6,8 +6,8 @@ import java.nio.file.Paths
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-import com.overviewdocs.pdfocr.exceptions._
-import com.overviewdocs.pdfocr.test.UnitSpec
+import org.overviewproject.pdfocr.exceptions._
+import org.overviewproject.pdfocr.test.UnitSpec
 
 class PdfDocumentSpec extends UnitSpec {
   private def load(resourceName: String): Future[PdfDocument] = {
