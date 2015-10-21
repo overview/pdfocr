@@ -3,19 +3,14 @@ package com.overviewdocs.pdfocr.pdf
 import java.awt.{Dimension,Rectangle}
 import java.awt.geom.AffineTransform
 import java.awt.image.BufferedImage
-import java.io.{IOException,StringReader}
-import java.util.regex.Pattern
+import java.io.ByteArrayInputStream
 import org.apache.pdfbox.pdmodel.{PDDocument,PDPage,PDPageContentStream}
 import org.apache.pdfbox.pdmodel.common.PDRectangle
 import org.apache.pdfbox.pdmodel.font.PDType0Font
 import org.apache.pdfbox.rendering.{ImageType,PDFRenderer}
 import org.apache.pdfbox.text.PDFTextStripper
 import org.apache.pdfbox.util.Matrix
-import org.xml.sax.{Attributes,ContentHandler,InputSource,SAXException,SAXParseException}
-import org.xml.sax.ext.DefaultHandler2
-import org.xml.sax.helpers.XMLReaderFactory
 import scala.concurrent.{ExecutionContext,Future}
-import scala.collection.mutable.Buffer
 
 import com.overviewdocs.pdfocr.exceptions.PdfInvalidException
 
@@ -98,65 +93,25 @@ class PdfPage(val pdfDocument: PdfDocument, val pdPage: PDPage, val pageNumber: 
     * the resolution of the `toImage` output.
     */
   def addHocr(hocr: Array[Byte]): Unit = {
-    val hocrString = new String(hocr, "utf-8")
-    val hocrReader = new StringReader(hocrString)
-    val inputSource = new InputSource(hocrReader)
+    val input = new ByteArrayInputStream(hocr)
+    val parser = new HocrParser(input)
+
     val handler = new HocrHandler(this)
-    try {
-      val xmlReader = XMLReaderFactory.createXMLReader()
-      xmlReader.setContentHandler(handler)
-      xmlReader.setErrorHandler(handler)
-      xmlReader.setEntityResolver(handler)
-      xmlReader.setFeature("http://xml.org/sax/features/resolve-dtd-uris", false)
-      xmlReader.setFeature("http://xml.org/sax/features/validation", false)
-      xmlReader.parse(inputSource)
-    } catch {
-      case ex: Exception => {
-        ex.printStackTrace
-        throw ex
-      }
-    }
+
+    parser.foreach(handler.renderLine)
+
+    handler.close
   }
 
-  private class HocrHandler(pdfPage: PdfPage) extends DefaultHandler2 {
-    implicit class AugmentedPDRectangle(pdRectangle: PDRectangle) {
-      def toRectangle: Rectangle = new Rectangle(
-        pdRectangle.getLowerLeftX.toInt,
-        pdRectangle.getLowerLeftY.toInt,
-        pdRectangle.getWidth.toInt,
-        pdRectangle.getHeight.toInt
-      )
-    }
+  private class HocrHandler(pdfPage: PdfPage) {
+    private def pdRectangleToRectangle(pdRectangle: PDRectangle) = new Rectangle(
+      pdRectangle.getLowerLeftX.toInt,
+      pdRectangle.getLowerLeftY.toInt,
+      pdRectangle.getWidth.toInt,
+      pdRectangle.getHeight.toInt
+    )
 
-    implicit class AugmentedAttributes(attributes: Attributes) {
-      def className: String = Option(attributes.getValue("class")).getOrElse("")
-      def boundingBox: Rectangle = Option(attributes.getValue("title")).map(titleToBoundingBox).getOrElse(new Rectangle())
-
-      /** Converts `"bbox 296 2122 928 2155; x_wconf 95"` to `new Rectangle(296, 2122, 632, 33)` */
-      private def titleToBoundingBox(title: String): Rectangle = {
-        val matcher = BoundingBoxRegex.matcher(title)
-        matcher.find match {
-          case false => new Rectangle()
-          case true => {
-            val x0 = matcher.group(1).toInt
-            val y0 = matcher.group(2).toInt
-            val x1 = matcher.group(3).toInt
-            val y1 = matcher.group(4).toInt
-            new Rectangle(x0, y0, x1 - x0, y1 - y0)
-          }
-        }
-      }
-    }
-
-    private case class Word(bbox: Rectangle, text: String)
-
-    private val buf: StringBuilder = new StringBuilder
-    private var lineBoundingBox: Rectangle = new Rectangle()
-    private var wordBoundingBox: Rectangle = new Rectangle()
-    private val words: Buffer[Word] = Buffer()
-    private var parsingWord: Boolean = false
-
-    private val cropBox: Rectangle = pdfPage.pdPage.getCropBox.toRectangle
+    private val cropBox: Rectangle = pdRectangleToRectangle(pdfPage.pdPage.getCropBox)
     private val dpiScale: Double = PdfDpi.toDouble / pdfPage.bestDpi
     private val FontSize: Double = 12 // It's always 12; then we scale it
 
@@ -172,59 +127,16 @@ class PdfPage(val pdfDocument: PdfDocument, val pdPage: PDPage, val pageNumber: 
       ret
     }
 
-    // If we don't implement this, Xerces will download from the Web....
-    override def resolveEntity(name: String, publicId: String, baseURI: String, systemId: String): InputSource = {
-      new InputSource(new StringReader(""))
-    }
-
-    override def characters(ch: Array[Char], start: Int, length: Int): Unit = {
-      buf.append(String.valueOf(ch, start, length))
-    }
-
-    override def startElement(uri: String, localName: String, qName: String, attributes: Attributes): Unit = {
-      qName match {
-        case "span" if attributes.className == "ocr_line" => {
-          lineBoundingBox = attributes.boundingBox
-        }
-        case "span" if attributes.className == "ocrx_word" => {
-          parsingWord = true
-          wordBoundingBox = attributes.boundingBox
-        }
-        case _ =>
-      }
-    }
-
-    override def endElement(uri: String, localName: String, qName: String): Unit = {
-      qName match {
-        case "span" if parsingWord => {
-          parsingWord = false
-          val text = buf.toString.trim
-          if (text.nonEmpty) {
-            words.append(Word(wordBoundingBox, text))
-          }
-          buf.delete(0, buf.length)
-        }
-        case "span" if words.nonEmpty => {
-          renderLine
-          words.clear
-        }
-        case _ => {}
-      }
-    }
-
-    override def endDocument: Unit = {
+    def close: Unit = {
       if (mustCloseStream) {
         stream.endText
         stream.close
       }
     }
 
-    override def error(ex: SAXParseException): Unit = fatalError(ex)
-    override def warning(ex: SAXParseException): Unit = error(ex)
+    def renderLine(line: HocrLine): Unit = {
+      val words = line.words
 
-    private val BoundingBoxRegex: Pattern = Pattern.compile("\\bbbox (\\d+) (\\d+) (\\d+) (\\d+)\\b")
-
-    private def renderLine: Unit = {
       /*
        * When Tesseract finds a "line", it gives the line's dimensions as a
        * bbox. However, the line might be slightly crooked, in which case the
@@ -245,14 +157,14 @@ class PdfPage(val pdfDocument: PdfDocument, val pdPage: PDPage, val pageNumber: 
        * know `baseline = top - ascent`. We'll calculate `top` by centering the
        * `middle` at the `lineBbox` middle.
        */
-      val maxWordHeight: Double = words.map(_.bbox.height).max // in hOCR coordinates
+      val maxWordHeight: Double = words.map(_.boundingBox.height).max // in hOCR coordinates
       val scaleY: Double = maxWordHeight / FontSize * dpiScale
 
-      val lineTop: Double = lineBoundingBox.y + (lineBoundingBox.height - maxWordHeight) * 0.5 // hOCR coordinates
+      val lineTop: Double = line.boundingBox.y + (line.boundingBox.height - maxWordHeight) * 0.5 // hOCR coordinates
       val baseline: Double = cropBox.height - lineTop * dpiScale - fontAscent * scaleY - cropBox.y // in PDF coordinates
 
       words.foreach { word =>
-        val bbox = word.bbox
+        val bbox = word.boundingBox
 
         stream.setFont(font, FontSize.toFloat)
 
