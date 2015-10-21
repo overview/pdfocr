@@ -1,6 +1,6 @@
 package com.overviewdocs.pdfocr.pdf
 
-import java.awt.{Dimension,Rectangle}
+import java.awt.Rectangle
 import java.awt.geom.AffineTransform
 import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
@@ -10,7 +10,6 @@ import org.apache.pdfbox.pdmodel.font.PDType0Font
 import org.apache.pdfbox.rendering.{ImageType,PDFRenderer}
 import org.apache.pdfbox.text.PDFTextStripper
 import org.apache.pdfbox.util.Matrix
-import scala.concurrent.{ExecutionContext,Future}
 
 import com.overviewdocs.pdfocr.exceptions.PdfInvalidException
 
