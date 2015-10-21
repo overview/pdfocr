@@ -13,10 +13,10 @@ Usage
 
 You've got to use Scala. Code something like this:
 
-    import org.overviewproject.pdfocr.{PdfOcr,PdfOcrProgress,PdfOcrResult}
-    import org.overviewproject.pdfocr.exceptions._
     import java.nio.file.Path
     import java.util.Locale
+    import org.overviewproject.pdfocr.{PdfOcr,PdfOcrProgress,PdfOcrResult}
+    import org.overviewproject.pdfocr.exceptions._
     import scala.concurrent.Future
 
     val pdfOcr = new PdfOcr()                          // default settings: finds tesseract in your $PATH
