@@ -3,7 +3,7 @@ Use Tesseract to make a PDF searchable.
 Installation
 ------------
 
-Install [Tesseract](https://github.com/tesseract-ocr/tesseract) v3.0.3. This
+Install [Tesseract](https://github.com/tesseract-ocr/tesseract) v3.0.4. This
 library shells out to it.
 
 Then install this package.
