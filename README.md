@@ -6,7 +6,17 @@ Installation
 Install [Tesseract](https://github.com/tesseract-ocr/tesseract) v3.0.4. This
 library shells out to it.
 
-Then install this package.
+Then install this package. Maven-style:
+
+    <dependency>
+      <groupId>org.overviewproject</groupId>
+      <artifactId>pdfocr_2.11</artifactId>
+      <version>0.0.1-SNAPSHOT</version>
+    </dependency>
+
+Sbt-style:
+
+    dependencies += "org.overviewproject" %% "pdfocr" % "0.0.1-SNAPSHOT"
 
 Usage
 -----
