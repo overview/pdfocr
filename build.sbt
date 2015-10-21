@@ -4,7 +4,9 @@ name := "pdfocr"
 
 version := "0.0.1-SNAPSHOT"
 
-organization := "overviewproject.org"
+homepage := Some(url("https://github.com/overview/pdfocr"))
+
+organization := "org.overviewproject"
 
 organizationName := "Overview Services Inc."
 
@@ -45,3 +47,30 @@ testOptions in Test += Tests.Argument("-oDF")
 
 
 // Publish settings
+
+publishTo <<= version { v: String =>
+  if (v.endsWith("SNAPSHOT")) {
+    Some("snapshots" at "https://oss.sonatype.org/content/repositories/snapshots")
+  } else {
+    Some("releases" at "https://oss.sonatype.org/service/local/staging/deploy/maven2")
+  }
+}
+
+publishMavenStyle := true
+
+pomIncludeRepository := { _ => false }
+
+pomExtra := (
+  <scm>
+    <connection>scm:git:github.com/overview/pdfocr.git</connection>
+    <developerConnection>scm:git:git@github.com:overview/pdfocr.git</developerConnection>
+    <url>github.com/overview/pdfocr.git</url>
+  </scm>
+  <developers>
+    <developer>
+      <id>adam@adamhooper.com</id>
+      <name>Adam Hooper</name>
+      <url>http://adamhooper.com</url>
+    </developer>
+  </developers>
+)

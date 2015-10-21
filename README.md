@@ -79,6 +79,23 @@ After that,
 4. Return to step 2.
 5. Commit to a git branch, push it to GitHub, and submit a pull request.
 
+Publishing
+----------
+
+We use [sbt-sonatype](https://github.com/xerial/sbt-sonatype for more details) for all this.
+
+Setup: using the sbt-sonatype instructions, ensure you've done these things:
+
+* Created an account at https://oss.sonatype.org and get access to this project.
+* Created `~/.sbt/0.13/sonatype.sbt` with your credentials.
+
+Then, every new version:
+
+1. `sbt publishSigned` to deploy to staging
+2. `sbt sonatypeRelease` to close and promote it
+
+If the version ends in `-SNAPSHOT`, you won't be able to release it.
+
 License
 -------
 
