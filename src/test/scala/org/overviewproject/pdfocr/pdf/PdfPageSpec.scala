@@ -1,5 +1,8 @@
 package org.overviewproject.pdfocr.pdf
 
+import java.awt.image.{BufferedImage,DataBufferByte}
+import javax.imageio.ImageIO
+import java.io.File
 import java.nio.file.Paths
 import org.apache.pdfbox.pdmodel.{PDDocument,PDPage,PDPageContentStream}
 import org.apache.pdfbox.pdmodel.common.PDRectangle
@@ -29,12 +32,20 @@ class PdfPageSpec extends UnitSpec {
     val pdDocument = new PDDocument()
     val pdfDocument = new PdfDocument(Paths.get(""), pdDocument)
     val pdPage = new PDPage()
+    pdPage.setMediaBox(new PDRectangle(144, 144))
     pdDocument.addPage(pdPage)
     val stream = new PDPageContentStream(pdDocument, pdPage)
+
     stream.beginText
     stream.setFont(PDType1Font.HELVETICA, 12)
     stream.showText("Hello, world!")
     stream.endText
+
+    stream.setStrokingColor(255, 0, 0)
+    stream.moveTo(10, 80)
+    stream.lineTo(90, 80)
+    stream.stroke
+
     stream.close
     (pdfDocument, new PdfPage(pdfDocument, pdPage, 0))
   }
@@ -48,6 +59,11 @@ class PdfPageSpec extends UnitSpec {
     val page = pageIt.next.futureValue
 
     (pdf, page)
+  }
+
+  private def imageToDataBytes(image: BufferedImage): Array[Array[Byte]] = {
+    // Assume 8-bit image data
+    image.getRaster.getDataBuffer.asInstanceOf[DataBufferByte].getBankData
   }
 
   describe("toText") {
@@ -80,6 +96,40 @@ class PdfPageSpec extends UnitSpec {
         val image = page.toImage
         image.getWidth must equal(300)
         image.getHeight must equal(600)
+      } finally {
+        document.close
+      }
+    }
+
+    it("should return an 8-bit grayscale imaage") {
+      /*
+       * [adam] I don't normally write specs that just duplicate the actual
+       * code. I added this one because without it, the next test wouldn't
+       * make sense.
+       */
+      val (document, page) = helloWorld
+
+      try {
+        val image = page.toImage
+        image.getType must equal(BufferedImage.TYPE_BYTE_GRAY)
+      } finally {
+        document.close
+      }
+    }
+
+    it("should return the correct image data") {
+      /*
+       * If this test fails, do a visual compare and possibly change the image
+       * in the classpath.
+       */
+      val (document, page) = helloWorld
+
+      try {
+        val image = page.toImage
+        //ImageIO.write(image, "png", new File("pdfPage-toImage-should-return-the-correct-image-data.png"))
+
+        val expected = ImageIO.read(getClass.getResource("/expected-images/pdfPage-toImage-should-return-the-correct-image-data.png"))
+        imageToDataBytes(image) must equal(imageToDataBytes(expected))
       } finally {
         document.close
       }
