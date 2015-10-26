@@ -244,4 +244,67 @@ class PdfPageSpec extends UnitSpec {
 
     // todo figure out whether there's a way to throw a PdfInvalidException
   }
+
+  describe("addHocr") {
+    val hocr = """<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+      <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+      <head>
+        <title>
+          </title>
+          <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+          <meta name='ocr-system' content='tesseract 3.04.00' />
+          <meta name='ocr-capabilities' content='ocr_page ocr_carea ocr_par ocr_line ocrx_word'/>
+        </head>
+        <body>
+          <div class='ocr_page' id='page_1' title='image "page.png"; bbox 0 0 100 200; ppageno 0'>
+            <div class='ocr_carea' id='block_1_4' title="bbox 0 0 100 200">
+              <p class='ocr_par' dir='ltr' id='par_1_4' title="bbox 0 0 100 200">
+                <span class='ocr_line' id='line_1_24' title="$title"><span class='ocrx_word' id='word_1_326' title='bbox 0 0 100 200' lang='eng' dir='ltr'>OCR!</span>
+                </span>
+              </p>
+            </div>
+          </div>
+        </body>
+      </html>
+    """.getBytes("utf-8")
+
+    it("should add text to the page") {
+      val (document, page) = helloWorld
+
+      try {
+        page.addHocr(hocr)
+        page.toText must equal("Hello, world!\nOCR!\n")
+      } finally {
+        document.close
+      }
+    }
+
+    it("should make isFromOcr return true") {
+      val (document, page) = helloWorld
+
+      try {
+        page.addHocr(hocr)
+        page.isFromOcr must equal(true)
+      } finally {
+        document.close
+      }
+    }
+
+    it("should keep isFromOcr false on other pages") {
+      val (document, page) = helloWorld
+
+      try {
+        val pdPage2 = new PDPage()
+        document.pdDocument.addPage(pdPage2)
+        val page2 = new PdfPage(document, pdPage2, 1)
+
+        page.addHocr(hocr)
+        page2.isFromOcr must equal(false)
+      } finally {
+        document.close
+      }
+    }
+  }
 }

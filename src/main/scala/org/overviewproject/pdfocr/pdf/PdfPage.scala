@@ -121,6 +121,15 @@ class PdfPage(val pdfDocument: PdfDocument, val pdPage: PDPage, val pageNumber: 
     handler.close
   }
 
+  /** Returns true iff some of this text has a "pdfocr-ocr-text" font. */
+  def isFromOcr: Boolean = Option(pdPage.getResources) match {
+    case Some(resources) => {
+      val pdFontNames = iterableAsScalaIterable(resources.getFontNames) // "/F1", "/F2", etc
+      pdFontNames.exists(cosName => resources.getFont(cosName).getFontDescriptor.getFontName == "pdfocr-ocr-text")
+    }
+    case None => false
+  }
+
   /** Returns a one-page PDF, as a byte array.
     *
     * Even if the original `pdDocument` is a single page, this method will
@@ -183,7 +192,12 @@ object PdfPage {
     private val dpiScale: Double = PdfDpi.toDouble / pdfPage.bestDpi
     private val FontSize: Double = 12 // It's always 12; then we scale it
 
-    private lazy val font = PDType0Font.load(pdfPage.pdDocument, getClass.getResourceAsStream("/unifont-8.0.01.ttf"))
+    private lazy val font = {
+      val ret = PDType0Font.load(pdfPage.pdDocument, getClass.getResourceAsStream("/unifont-8.0.01.ttf"))
+      ret.getFontDescriptor.setFontName("pdfocr-ocr-text")
+      ret
+    }
+
     private lazy val fontAscent = font.getFontDescriptor.getAscent * FontSize / 1000
     private var mustCloseStream = false
     private lazy val stream: PDPageContentStream = {
