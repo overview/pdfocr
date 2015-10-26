@@ -18,7 +18,7 @@ import scala.collection.mutable.Buffer
   *     val parser = new HocrParser(input)
   *     parser.foreach { line =&gt;
   *       line.foreach { word =&gt;
-  *         System.out.println(s"Word ${word.text} at (${word.boundingBox.x}, ${word.boundingBox.y})")
+  *         System.out.println(s"Word \${word.text} at (\${word.boundingBox.x}, \${word.boundingBox.y})")
   *       }
   *     }
   */
