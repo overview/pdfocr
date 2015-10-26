@@ -131,30 +131,35 @@ class PdfPage(val pdfDocument: PdfDocument, val pdPage: PDPage, val pageNumber: 
     // Mostly copied from pdfbox/.../multipdf/Splitter.java, but without the
     // horrendous API.
     val newDocument = new PDDocument(MemoryUsageSetting.setupMainMemoryOnly)
-    newDocument.getDocument.setVersion(pdDocument.getVersion)
-    newDocument.setDocumentInformation(pdDocument.getDocumentInformation)
-    newDocument.getDocumentCatalog.setViewerPreferences(pdDocument.getDocumentCatalog.getViewerPreferences)
-    val newPage = newDocument.importPage(pdPage)
-    newPage.setCropBox(pdPage.getCropBox)
-    newPage.setMediaBox(pdPage.getMediaBox)
-    newPage.setResources(pdPage.getResources) // only the resources of the page will be copied
-    newPage.setRotation(pdPage.getRotation)
 
-    // Remove links to pages, to avoid copying resources
-    // todo from pdfbox: preserve links to this page
-    iterableAsScalaIterable(newPage.getAnnotations).foreach { annotation =>
-      annotation.setPage(null)
-      annotation match { case link: PDAnnotationLink => {
-        Option(link.getDestination).foreach(nixPage)
-        link.getAction match {
-          case goAction: PDActionGoTo => Option(goAction.getDestination).foreach(nixPage)
-        }
-      }}
+    try {
+      newDocument.getDocument.setVersion(pdDocument.getVersion)
+      newDocument.setDocumentInformation(pdDocument.getDocumentInformation)
+      newDocument.getDocumentCatalog.setViewerPreferences(pdDocument.getDocumentCatalog.getViewerPreferences)
+      val newPage = newDocument.importPage(pdPage)
+      newPage.setCropBox(pdPage.getCropBox)
+      newPage.setMediaBox(pdPage.getMediaBox)
+      newPage.setResources(pdPage.getResources) // only the resources of the page will be copied
+      newPage.setRotation(pdPage.getRotation)
+
+      // Remove links to pages, to avoid copying resources
+      // todo from pdfbox: preserve links to this page
+      iterableAsScalaIterable(newPage.getAnnotations).foreach { annotation =>
+        annotation.setPage(null)
+        annotation match { case link: PDAnnotationLink => {
+          Option(link.getDestination).foreach(nixPage)
+          link.getAction match {
+            case goAction: PDActionGoTo => Option(goAction.getDestination).foreach(nixPage)
+          }
+        }}
+      }
+
+      val outputStream = new ByteArrayOutputStream
+      newDocument.save(outputStream)
+      outputStream.toByteArray
+    } finally {
+      newDocument.close
     }
-
-    val outputStream = new ByteArrayOutputStream
-    newDocument.save(outputStream)
-    outputStream.toByteArray
   }
 
   private def nixPage(destination: PDDestination): Unit = destination match {
