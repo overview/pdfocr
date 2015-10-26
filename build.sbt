@@ -32,6 +32,7 @@ libraryDependencies ++= Seq(
   "com.levigo.jbig2" % "levigo-jbig2-imageio" % "1.6.1",
   "org.apache.pdfbox" % "pdfbox" % "2.0.0-SNAPSHOT", // using local copy right now, pending fix for https://issues.apache.org/jira/browse/PDFBOX-3001
   "org.scalatest" % "scalatest_2.11" % "2.2.4" % "test",
+  "org.mockito" % "mockito-core" % "1.10.19" % "test",
   "org.slf4j" % "jcl-over-slf4j" % "1.7.12" % "test", // So we can mute warnings during testing
   "org.slf4j" % "slf4j-simple" % "1.7.12" % "test"    // So we can mute warnings during testing
 )

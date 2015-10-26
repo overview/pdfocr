@@ -54,6 +54,16 @@ class PdfDocument(
     *       .recover { case ex: PdfInvalidException =&gt; ... }
     */
   def pages: Iterator[Future[PdfPage]] = new PdfDocument.PdfPageIterator(this)(ec)
+
+  /** Writes the document to a file.
+    *
+    * The intended usage is:
+    *
+    * 1. Load a PdfDocument.
+    * 2. Mutate its pages.
+    * 3. Write it to a new location (this method).
+    */
+  def write(path: Path): Future[Unit] = Future(blocking(pdDocument.save(path.toFile)))
 }
 
 object PdfDocument {
