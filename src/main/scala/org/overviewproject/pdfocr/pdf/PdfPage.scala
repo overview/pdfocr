@@ -6,14 +6,14 @@ import java.awt.image.BufferedImage
 import java.io.{ByteArrayInputStream,ByteArrayOutputStream}
 import org.apache.pdfbox.pdmodel.{PDDocument,PDPage,PDPageContentStream}
 import org.apache.pdfbox.pdmodel.common.PDRectangle
-import org.apache.pdfbox.pdmodel.font.PDType0Font
+import org.apache.pdfbox.pdmodel.font.{PDFont,PDType0Font}
 import org.apache.pdfbox.pdmodel.interactive.action.PDActionGoTo
 import org.apache.pdfbox.pdmodel.interactive.annotation.{PDAnnotation,PDAnnotationLink}
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.{PDDestination,PDPageDestination}
 import org.apache.pdfbox.io.MemoryUsageSetting
-import org.apache.pdfbox.rendering.{ImageType,PDFRenderer}
+import org.apache.pdfbox.rendering.{ImageType,PageDrawer,PageDrawerParameters,PDFRenderer}
 import org.apache.pdfbox.text.PDFTextStripper
-import org.apache.pdfbox.util.Matrix
+import org.apache.pdfbox.util.{Matrix,Vector}
 import scala.collection.JavaConversions.iterableAsScalaIterable
 
 import org.overviewproject.pdfocr.exceptions.PdfInvalidException
@@ -80,6 +80,22 @@ class PdfPage(val pdfDocument: PdfDocument, val pdPage: PDPage, val pageNumber: 
   @throws(classOf[PdfInvalidException])
   def toImage: BufferedImage = {
     val renderer = new PDFRenderer(pdDocument)
+
+    try {
+      renderer.renderImageWithDPI(pageNumber, bestDpi, ImageType.GRAY)
+    } catch {
+      case ex: NullPointerException => throw new PdfInvalidException(pdfDocument.path.toString, ex)
+    }
+  }
+
+  /** Renders the page to an image, omitting all text.
+    *
+    * In other words, if a PDF has a stream with a rectangle, some text and an
+    * image, this method will return an imaage with a rectangle and an image.
+    */
+  @throws(classOf[PdfInvalidException])
+  def toImageWithoutText: BufferedImage = {
+    val renderer = new PdfPage.PDFRendererWithoutText(pdDocument)
 
     try {
       renderer.renderImageWithDPI(pageNumber, bestDpi, ImageType.GRAY)
@@ -227,5 +243,17 @@ object PdfPage {
         stream.showText(word.text)
       }
     }
+  }
+
+  private class PDFRendererWithoutText(document: PDDocument) extends PDFRenderer(document) {
+    override protected def createPageDrawer(parameters: PageDrawerParameters): PageDrawer = {
+      new PageDrawerWithoutText(parameters)
+    }
+  }
+
+  private class PageDrawerWithoutText(parameters: PageDrawerParameters) extends PageDrawer(parameters) {
+    override def beginText: Unit = ()
+    override def endText: Unit = ()
+    override protected def showFontGlyph(textRenderingMatrix: Matrix, font: PDFont, code: Int, unicode: String, displacement: Vector): Unit = ()
   }
 }

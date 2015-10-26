@@ -172,6 +172,49 @@ class PdfPageSpec extends UnitSpec {
     }
   }
 
+  describe("toImageWithoutText") {
+    it("should return an image at 300dpi") {
+      val (document, page) = helloWorld
+      page.pdPage.setMediaBox(new PDRectangle(72, 144))
+
+      try {
+        val image = page.toImageWithoutText
+        image.getWidth must equal(300)
+        image.getHeight must equal(600)
+      } finally {
+        document.close
+      }
+    }
+
+    it("should return the correct image data") {
+      /*
+       * If this test fails, do a visual compare and possibly change the image
+       * in the classpath.
+       */
+      val (document, page) = helloWorld
+
+      try {
+        val image = page.toImageWithoutText
+        //ImageIO.write(image, "png", new File("pdfPage-toImageWithoutText-should-return-the-correct-image-data.png"))
+
+        val expected = ImageIO.read(getClass.getResource("/expected-images/pdfPage-toImageWithoutText-should-return-the-correct-image-data.png"))
+        imageToDataBytes(image) must equal(imageToDataBytes(expected))
+      } finally {
+        document.close
+      }
+    }
+
+    it("should throw a PdfInvalidException") {
+      val (document, page) = loadInvalidStreamPage
+
+      try {
+        a [PdfInvalidException] must be thrownBy(page.toImageWithoutText)
+      } finally {
+        document.close
+      }
+    }
+  }
+
   describe("toPdf") {
     it("should return") {
       val pdf = load("2-pages.pdf").futureValue
