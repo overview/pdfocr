@@ -3,14 +3,14 @@ package org.overviewproject.pdfocr
 package object exceptions {
   sealed abstract class PdfOcrException(message: String, cause: Exception) extends Exception(message, cause)
 
-  class PdfInvalidException(val path: String, cause: Exception)
-    extends PdfOcrException(s"Error in PDF file `$path`", cause)
+  class PdfInvalidException(cause: Exception)
+    extends PdfOcrException(s"Error in PDF file", cause)
 
-  class PdfEncryptedException(val path: String, cause: Exception)
-    extends PdfOcrException(s"PDF file `$path` is password-protected", cause)
+  class PdfEncryptedException(cause: Exception)
+    extends PdfOcrException(s"PDF file is password-protected", cause)
 
-  class TesseractMissingException(val path: String, cause: Exception)
-    extends PdfOcrException(s"Could not invoke tesseract command `$path`", cause)
+  class TesseractMissingException(cause: Exception)
+    extends PdfOcrException(s"Could not find `tesseract` executable", cause)
 
   class TesseractLanguageMissingException(val language: String)
     extends PdfOcrException(s"Missing Tesseract language data files for language `$language`", null)

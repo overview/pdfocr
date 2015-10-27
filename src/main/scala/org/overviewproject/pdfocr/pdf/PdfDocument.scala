@@ -84,7 +84,7 @@ object PdfDocument {
           pdfDocument.pdDocument.getPage(pageNumber)
         } catch {
           case ex: NullPointerException => {
-            throw new PdfInvalidException(pdfDocument.path.toString, ex)
+            throw new PdfInvalidException(ex)
           }
           case ex: Exception => {
             ex.printStackTrace
@@ -122,11 +122,11 @@ object PdfDocument {
       val pdDocument = PDDocument.load(path.toFile, memoryUsageSetting) // Only reads trailer+xref
       new PdfDocument(path, pdDocument)
     } catch {
-      case ex: InvalidPasswordException => throw new PdfEncryptedException(path.toString, ex)
+      case ex: InvalidPasswordException => throw new PdfEncryptedException(ex)
       case ex: FileNotFoundException => throw ex
       case ex: SecurityException => throw ex
-      case ex: IllegalArgumentException => throw new PdfInvalidException(path.toString, ex)
-      case ex: IOException => throw new PdfInvalidException(path.toString, ex)
+      case ex: IllegalArgumentException => throw new PdfInvalidException(ex)
+      case ex: IOException => throw new PdfInvalidException(ex)
     }
   })
 }

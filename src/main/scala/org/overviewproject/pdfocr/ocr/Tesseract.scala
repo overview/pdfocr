@@ -91,7 +91,7 @@ class Tesseract(val options: TesseractOptions) {
         )
         processBuilder.start
       } catch {
-        case e: IOException => throw new TesseractMissingException(options.tesseractPath, e)
+        case e: IOException => throw new TesseractMissingException(e)
       }
     }
   }

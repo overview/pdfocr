@@ -36,7 +36,6 @@ class PdfDocumentSpec extends UnitSpec {
     it("throws PdfInvalidException when the file is not a PDF") {
       val ex = load("not-a-pdf.pdf").failed.futureValue
       ex mustBe a[PdfInvalidException]
-      Paths.get(ex.asInstanceOf[PdfInvalidException].path).getFileName.toString must equal("not-a-pdf.pdf")
     }
 
     it("throws IOException when the file does not exist") {

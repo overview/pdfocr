@@ -44,7 +44,7 @@ class PdfPage(val pdfDocument: PdfDocument, val pdPage: PDPage, val pageNumber: 
     try {
       stripper.getText(pdDocument)
     } catch {
-      case ex: NullPointerException => throw new PdfInvalidException(pdfDocument.path.toString, ex)
+      case ex: NullPointerException => throw new PdfInvalidException(ex)
     }
   }
 
@@ -84,7 +84,7 @@ class PdfPage(val pdfDocument: PdfDocument, val pdPage: PDPage, val pageNumber: 
     try {
       renderer.renderImageWithDPI(pageNumber, bestDpi, ImageType.GRAY)
     } catch {
-      case ex: NullPointerException => throw new PdfInvalidException(pdfDocument.path.toString, ex)
+      case ex: NullPointerException => throw new PdfInvalidException(ex)
     }
   }
 
@@ -100,7 +100,7 @@ class PdfPage(val pdfDocument: PdfDocument, val pdPage: PDPage, val pageNumber: 
     try {
       renderer.renderImageWithDPI(pageNumber, bestDpi, ImageType.GRAY)
     } catch {
-      case ex: NullPointerException => throw new PdfInvalidException(pdfDocument.path.toString, ex)
+      case ex: NullPointerException => throw new PdfInvalidException(ex)
     }
   }
 

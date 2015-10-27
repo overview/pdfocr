@@ -41,8 +41,8 @@ class PdfOcrSpec extends UnitSpec with BeforeAndAfter {
       override def loadPdfDocument(path: Path)(implicit ec: ExecutionContext) = path.toString match {
         case "file-not-found.pdf" => Future.failed(new FileNotFoundException)
         case "security.pdf" => Future.failed(new SecurityException)
-        case "pdf-encrypted.pdf" => Future.failed(new PdfEncryptedException(path.toString, new Exception("foo")))
-        case "pdf-invalid.pdf" => Future.failed(new PdfInvalidException(path.toString, new Exception("foo")))
+        case "pdf-encrypted.pdf" => Future.failed(new PdfEncryptedException(new Exception("foo")))
+        case "pdf-invalid.pdf" => Future.failed(new PdfInvalidException(new Exception("foo")))
         case "1-page.pdf" => {
           when(mockPdfDocument.nPages).thenReturn(1)
           Future.successful(mockPdfDocument)
@@ -188,7 +188,7 @@ class PdfOcrSpec extends UnitSpec with BeforeAndAfter {
       val (pdfOcr, tesseract, pdfDocument) = init
 
       val pdfPage = mock[PdfPage]
-      when(pdfPage.toText).thenThrow(new PdfInvalidException("foo.pdf", null))
+      when(pdfPage.toText).thenThrow(new PdfInvalidException(null))
 
       val pages = Seq(Future.successful(pdfPage)).iterator
       when(pdfDocument.pages).thenReturn(pages)
