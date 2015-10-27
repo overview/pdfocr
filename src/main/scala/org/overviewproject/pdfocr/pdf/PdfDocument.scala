@@ -118,15 +118,15 @@ object PdfDocument {
     val memoryUsageSetting = MemoryUsageSetting.setupMixed(PdfParserMainMemoryBytes)
 
     // Read enough of the document to produce an error if it isn't a PDF
-    val pdDocument: PDDocument = try {
-      PDDocument.load(path.toFile, memoryUsageSetting) // Only reads trailer+xref
+    try {
+      val pdDocument = PDDocument.load(path.toFile, memoryUsageSetting) // Only reads trailer+xref
+      new PdfDocument(path, pdDocument)
     } catch {
       case ex: InvalidPasswordException => throw new PdfEncryptedException(path.toString, ex)
       case ex: FileNotFoundException => throw ex
       case ex: SecurityException => throw ex
+      case ex: IllegalArgumentException => throw new PdfInvalidException(path.toString, ex)
       case ex: IOException => throw new PdfInvalidException(path.toString, ex)
     }
-
-    new PdfDocument(path, pdDocument)
   })
 }
