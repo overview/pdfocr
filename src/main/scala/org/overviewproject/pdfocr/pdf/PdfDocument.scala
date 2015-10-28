@@ -120,7 +120,15 @@ object PdfDocument {
     // Read enough of the document to produce an error if it isn't a PDF
     try {
       val pdDocument = PDDocument.load(path.toFile, memoryUsageSetting) // Only reads trailer+xref
-      new PdfDocument(path, pdDocument)
+
+      try {
+        new PdfDocument(path, pdDocument)
+      } catch {
+        case ex: Throwable => {
+          pdDocument.close
+          throw ex
+        }
+      }
     } catch {
       case ex: InvalidPasswordException => throw new PdfEncryptedException(ex)
       case ex: FileNotFoundException => throw ex
