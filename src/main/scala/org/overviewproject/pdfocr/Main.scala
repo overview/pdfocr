@@ -6,11 +6,11 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 object Main {
-  def progress(nPages: Int, nPagesTotal: Int): Future[Unit] = {
+  def progress(nPages: Int, nPagesTotal: Int): Boolean = {
     if (nPages < nPagesTotal) {
       System.err.println(s"Processing page ${nPages + 1} of $nPagesTotal...")
     }
-    Future.successful(())
+    true
   }
 
   def main(args: Array[String]): Unit = {

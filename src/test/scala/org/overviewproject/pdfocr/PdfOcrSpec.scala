@@ -3,7 +3,6 @@ package org.overviewproject.pdfocr
 import java.awt.image.BufferedImage
 import java.io.FileNotFoundException
 import java.nio.file.{Files,Path,Paths}
-import java.util.concurrent.ExecutionException
 import java.util.Locale
 import org.mockito.Matchers.any
 import org.mockito.Mockito.{never,when,verify}
@@ -59,7 +58,7 @@ class PdfOcrSpec extends UnitSpec with BeforeAndAfter {
 
   private val emptyImage: BufferedImage = new BufferedImage(1, 1, BufferedImage.TYPE_BYTE_GRAY)
 
-  private def dummyProgress(nPagesDone: Int, nPagesTotal: Int): Future[Unit] = Future.successful(())
+  private def dummyProgress(nPagesDone: Int, nPagesTotal: Int): Boolean = true
 
   private val dummyLocales: Seq[Locale] = Seq(new Locale("en"))
 
@@ -198,15 +197,15 @@ class PdfOcrSpec extends UnitSpec with BeforeAndAfter {
       verify(pdfDocument).close
     }
 
-    it("should throw progress between each page") {
+    it("should invoke progress between each page") {
       val (pdfOcr, tesseract, pdfDocument) = init
       val pdfPages = mockPdfPages("p1" * 50, "p2" * 50).map(Future.successful _).iterator
       when(pdfDocument.pages).thenReturn(pdfPages)
 
       val calls = scala.collection.mutable.Buffer[(Int,Int)]()
-      def progress(nPages: Int, nPagesTotal: Int): Future[Unit] = {
+      def progress(nPages: Int, nPagesTotal: Int): Boolean = {
         calls.+=((nPages, nPagesTotal))
-        Future.successful(())
+        true
       }
 
       pdfOcr.makeSearchablePdf(Paths.get("2-page.pdf"), Paths.get("out.pdf"), dummyLocales, progress).futureValue
@@ -214,24 +213,15 @@ class PdfOcrSpec extends UnitSpec with BeforeAndAfter {
       calls must equal(Seq((0, 2), (1, 2), (2, 2)))
     }
 
-    it("should throw ExecutionException if progress throws an exception") {
+    it("should cancel if progress returns false") {
       val (pdfOcr, tesseract, pdfDocument) = init
       val pdfPages = mockPdfPages("p1" * 50, "p2" * 50).map(Future.successful _).iterator
       when(pdfDocument.pages).thenReturn(pdfPages)
 
-      val abort = new Exception("abort")
+      def progress(nPages: Int, nPagesTotal: Int): Boolean = nPages == 1
 
-      def progress(nPages: Int, nPagesTotal: Int): Future[Unit] = {
-        if (nPages == 1) {
-          Future.failed(abort)
-        } else {
-          Future.successful(())
-        }
-      }
-
-      val ex = pdfOcr.makeSearchablePdf(Paths.get("2-page.pdf"), Paths.get("out.pdf"), dummyLocales, progress).failed.futureValue
-      ex mustBe a[ExecutionException]
-      ex.getCause must equal(abort)
+      pdfOcr.makeSearchablePdf(Paths.get("2-page.pdf"), Paths.get("out.pdf"), dummyLocales, progress).futureValue
+      verify(pdfDocument, never).write(Paths.get("out.pdf"))
       verify(pdfDocument).close
     }
   }

@@ -2,7 +2,6 @@ package org.overviewproject.pdfocr
 
 import java.nio.file.Path
 import java.util.Locale
-import java.util.concurrent.ExecutionException
 import scala.concurrent.{ExecutionContext,Future}
 
 import org.overviewproject.pdfocr.ocr.{Tesseract,TesseractOptions}
@@ -22,7 +21,6 @@ trait PdfOcr {
     * * `PdfInvalidException`: the input PDF contains unrecoverable errors.
     * * `TesseractMissingException`: Tesseract cannot be run.
     * * `TesseractLanguageMissingException`: Tesseract needs a language file.
-    * * `ExecutionException`: the progress method returned a failed Future.
     *
     * It may also throw exceptions you should probably never see:
     *
@@ -30,43 +28,48 @@ trait PdfOcr {
     * * `SecurityException`: you cannot read the input or write the output.
     * * `TesseractFailedException`: Tesseract did not run properly.
     *
-    * If this method returns a failure, `out` will be deleted.
+    * If this method returns a failure, or if `progress()` returns `false`,
+    * `out` will not be written.
     *
     * @param in Path to input, which must be a valid PDF file.
     * @param out Path to output, which will be overwritten or deleted.
     * @param languages Languages to use for OCR.
     * @param progress Method to call with (nPagesCompleted, nPagesTotal) every
     *                 page. The first call will be (0, nPagesTotal) and the
-    *                 last call will be (nPagesTotal, nPagesTotal). OCR will
-    *                 not continue until the return value resolves. If the
-    *                 return value resolves into a failure, throw an
-    *                 ExecutionException. (This is how callers can cancel the
-    *                 OCR process.)
+    *                 last call will be (nPagesTotal, nPagesTotal). If the
+    *                 method ever returns `false`, the future will resolve and
+    *                 `out` will not be written. (This is how callers can
+    *                 cancel a lengthy OCR Process.)
     */
-  def makeSearchablePdf(in: Path, out: Path, languages: Seq[Locale], progress: (Int, Int) => Future[Unit])(implicit ec: ExecutionContext): Future[Unit] = {
+  def makeSearchablePdf(in: Path, out: Path, languages: Seq[Locale], progress: (Int, Int) => Boolean)(implicit ec: ExecutionContext): Future[Unit] = {
     loadPdfDocument(in).flatMap { pdfDocument =>
       val pageIterator = pdfDocument.pages
 
-      var curPage = 0
-      val nPages = pdfDocument.nPages
+      var cancelled: Boolean = false
+      var curPage: Int = 0
+      val nPages: Int = pdfDocument.nPages
 
       def step: Future[Unit] = {
-        progress(curPage, nPages)
-          .transform(identity, (t) => new ExecutionException("Aborted in progress callback", t))
-          .flatMap { _ =>
-            curPage += 1
-            if (pageIterator.hasNext) {
-              pageIterator.next
-                .flatMap { pdfPage => makePdfPageSearchable(pdfPage, languages) }
-                .flatMap { _ => step }
-            } else {
-              Future.successful(())
-            }
-          }
+        cancelled = !progress(curPage, nPages)
+
+        if (!cancelled && pageIterator.hasNext) {
+          curPage += 1 // for next time
+          pageIterator.next
+            .flatMap { pdfPage => makePdfPageSearchable(pdfPage, languages) }
+            .flatMap { _ => step }
+        } else {
+          Future.successful(())
+        }
       }
 
       step
-        .flatMap { _ => pdfDocument.write(out) }
+        .flatMap { _ =>
+          if (cancelled) {
+            Future.successful(())
+          } else {
+            pdfDocument.write(out)
+          }
+        }
         .andThen { case _ => pdfDocument.close }
     }
   }
