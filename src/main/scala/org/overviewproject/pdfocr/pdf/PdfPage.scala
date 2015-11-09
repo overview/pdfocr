@@ -4,6 +4,7 @@ import java.awt.Rectangle
 import java.awt.geom.AffineTransform
 import java.awt.image.BufferedImage
 import java.io.{ByteArrayInputStream,ByteArrayOutputStream}
+import org.apache.pdfbox.cos.COSName
 import org.apache.pdfbox.pdmodel.{PDDocument,PDPage,PDPageContentStream}
 import org.apache.pdfbox.pdmodel.common.PDRectangle
 import org.apache.pdfbox.pdmodel.font.{PDFont,PDType0Font}
@@ -121,11 +122,24 @@ class PdfPage(val pdfDocument: PdfDocument, val pdPage: PDPage, val pageNumber: 
     handler.close
   }
 
-  /** Returns true iff some of this text has a "pdfocr-ocr-text" font. */
+  /** Returns true iff some of this text has a "pdfocr-ocr-text" font.
+    *
+    * Does not throw an exception on an invalid PDF.
+    */
   def isFromOcr: Boolean = Option(pdPage.getResources) match {
     case Some(resources) => {
+      def getFontName(cosName: COSName): String = {
+        val option = for {
+          font <- Option(resources.getFont(cosName))
+          descriptor <- Option(font.getFontDescriptor)
+          name <- Option(descriptor.getFontName)
+        } yield name
+
+        option.getOrElse("")
+      }
+
       val pdFontNames = iterableAsScalaIterable(resources.getFontNames) // "/F1", "/F2", etc
-      pdFontNames.exists(cosName => resources.getFont(cosName).getFontDescriptor.getFontName == "pdfocr-ocr-text")
+      pdFontNames.exists(cosName => getFontName(cosName) == "pdfocr-ocr-text")
     }
     case None => false
   }
