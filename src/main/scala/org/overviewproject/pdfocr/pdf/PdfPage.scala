@@ -169,12 +169,16 @@ class PdfPage(val pdfDocument: PdfDocument, val pdPage: PDPage, val pageNumber: 
       // todo from pdfbox: preserve links to this page
       iterableAsScalaIterable(newPage.getAnnotations).foreach { annotation =>
         annotation.setPage(null)
-        annotation match { case link: PDAnnotationLink => {
-          Option(link.getDestination).foreach(nixPage)
-          link.getAction match {
-            case goAction: PDActionGoTo => Option(goAction.getDestination).foreach(nixPage)
+        annotation match {
+          case link: PDAnnotationLink => {
+            Option(link.getDestination).foreach(nixPage)
+            link.getAction match {
+              case goAction: PDActionGoTo => Option(goAction.getDestination).foreach(nixPage)
+              case _ => {}
+            }
           }
-        }}
+          case _ => {}
+        }
       }
 
       val outputStream = new ByteArrayOutputStream
