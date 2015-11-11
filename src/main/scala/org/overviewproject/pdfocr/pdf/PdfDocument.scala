@@ -86,11 +86,6 @@ object PdfDocument {
           case ex: NullPointerException => {
             throw new PdfInvalidException(ex)
           }
-          case ex: Exception => {
-            ex.printStackTrace
-            System.out.println("HERE HERE HERE")
-            throw ex
-          }
         }
 
         new PdfPage(pdfDocument, pdPage, pageNumber)
