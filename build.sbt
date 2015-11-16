@@ -16,6 +16,8 @@ description := "Library that shells to Tesseract to make PDFs searchable"
 
 licenses += "AGPLv3" -> url("http://www.gnu.org/licenses/agpl-3.0.html")
 
+fork in (Compile, run) := true // Main calls System.exit() to give proper return codes
+
 
 // Compile settings
 
