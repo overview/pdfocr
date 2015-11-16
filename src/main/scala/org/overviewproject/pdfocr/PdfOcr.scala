@@ -27,6 +27,7 @@ trait PdfOcr {
     * * `FileNotFoundException`: the input file or output directory is missing.
     * * `SecurityException`: you cannot read the input or write the output.
     * * `TesseractFailedException`: Tesseract did not run properly.
+    * * `OutOfMemoryException`: PDFBox has an evil bug.
     *
     * If this method returns a failure, or if `progress()` returns `false`,
     * `out` will not be written.
