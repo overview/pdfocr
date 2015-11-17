@@ -2,7 +2,7 @@ package org.overviewproject.pdfocr.pdf
 
 import java.awt.image.BufferedImage
 import java.io.IOException
-import java.nio.file.Paths
+import java.nio.file.{Files,Paths}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -40,6 +40,13 @@ class PdfDocumentSpec extends UnitSpec {
 
     it("throws IOException when the file does not exist") {
       PdfDocument.load(Paths.get("/this/path/is/very/unlikely/to/exist.pdf")).failed.futureValue mustBe a[IOException]
+    }
+
+    it("removes the owner password (so long as there is no user password)") {
+      val pdfDocument = load("owner-protected.pdf").futureValue
+      val outPath = Files.createTempFile("pdfocr-test-pdfdocument-", ".pdf")
+      pdfDocument.write(outPath).futureValue must equal(())
+      Files.delete(outPath)
     }
   }
 

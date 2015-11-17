@@ -115,6 +115,7 @@ object PdfDocument {
     // Read enough of the document to produce an error if it isn't a PDF
     try {
       val pdDocument = PDDocument.load(path.toFile, memoryUsageSetting) // Only reads trailer+xref
+      pdDocument.setAllSecurityToBeRemoved(true)
 
       try {
         new PdfDocument(path, pdDocument)

@@ -242,6 +242,12 @@ class PdfPageSpec extends UnitSpec {
       document.close
     }
 
+    it("should not produce an error when starting with an owner-protected (not viewer-protected) PDF") {
+      val pdf = load("owner-protected.pdf").futureValue
+      val page = pdf.pages.next.futureValue
+      page.toPdf.length mustNot equal(0) // really, we want no exception
+    }
+
     // todo figure out whether there's a way to throw a PdfInvalidException
   }
 
