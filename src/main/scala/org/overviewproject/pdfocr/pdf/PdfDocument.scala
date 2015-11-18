@@ -6,6 +6,7 @@ import org.apache.pdfbox.io.MemoryUsageSetting
 import org.apache.pdfbox.pdfparser.PDFParser
 import org.apache.pdfbox.pdmodel.{PDDocument,PDPage}
 import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException
+import org.apache.pdfbox.pdmodel.font.PDType0Font
 import scala.concurrent.{ExecutionContext,Future,blocking}
 
 import org.overviewproject.pdfocr.exceptions._
@@ -64,6 +65,17 @@ class PdfDocument(
     * 3. Write it to a new location (this method).
     */
   def write(path: Path): Future[Unit] = Future(blocking(pdDocument.save(path.toFile)))
+
+  /** Font we use to write OCR-ed text to the document.
+    *
+    * This variable is initialized in `PdfPage.addHocr()`. If you never call
+    * that method, this font will never be loaded.
+    */
+  private[pdf] lazy val hocrFont: PDType0Font = {
+    val ret = PDType0Font.load(pdDocument, getClass.getResourceAsStream("/unifont-8.0.01.ttf"))
+    ret.getFontDescriptor.setFontName("pdfocr-ocr-text") // For PdfPage.isFromOcr()
+    ret
+  }
 }
 
 object PdfDocument {

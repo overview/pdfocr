@@ -7,7 +7,7 @@ import java.io.{ByteArrayInputStream,ByteArrayOutputStream}
 import org.apache.pdfbox.cos.COSName
 import org.apache.pdfbox.pdmodel.{PDDocument,PDPage,PDPageContentStream}
 import org.apache.pdfbox.pdmodel.common.PDRectangle
-import org.apache.pdfbox.pdmodel.font.{PDFont,PDType0Font}
+import org.apache.pdfbox.pdmodel.font.PDFont
 import org.apache.pdfbox.pdmodel.interactive.action.PDActionGoTo
 import org.apache.pdfbox.pdmodel.interactive.annotation.{PDAnnotation,PDAnnotationLink}
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.{PDDestination,PDPageDestination}
@@ -210,11 +210,7 @@ object PdfPage {
     private val dpiScale: Double = PdfDpi.toDouble / pdfPage.bestDpi
     private val FontSize: Double = 12 // It's always 12; then we scale it
 
-    private lazy val font = {
-      val ret = PDType0Font.load(pdfPage.pdDocument, getClass.getResourceAsStream("/unifont-8.0.01.ttf"))
-      ret.getFontDescriptor.setFontName("pdfocr-ocr-text")
-      ret
-    }
+    private def font = pdfPage.pdfDocument.hocrFont
 
     private lazy val fontAscent = font.getFontDescriptor.getAscent * FontSize / 1000
     private var mustCloseStream = false
