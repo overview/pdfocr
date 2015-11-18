@@ -6,7 +6,8 @@ import java.util.Locale
 import java.util.regex.Pattern
 import javax.imageio.ImageIO
 import javax.imageio.stream.MemoryCacheImageOutputStream
-import scala.concurrent.{ExecutionContext,Future,blocking}
+import scala.collection.mutable
+import scala.concurrent.{ExecutionContext,Future,Promise,blocking}
 
 import org.overviewproject.pdfocr.exceptions._
 
@@ -51,18 +52,26 @@ class Tesseract(val options: TesseractOptions) {
 
   /** Blocking operation: read all of InputStream and write it to OutputStream.
     */
-  private def drainStream(source: InputStream, sink: OutputStream): Unit = {
+  private def drainStream(source: InputStream): Array[Byte] = {
+    val byteArrays = mutable.ListBuffer[Array[Byte]]()
+
     val buffer = new Array[Byte](BufferSize)
-    var n: Int = 0
     while (true) {
       val n = source.read(buffer)
+
       if (n > 0) {
-        sink.write(buffer, 0, n)
-      } else {
-        sink.close
-        return
+        byteArrays.+=(buffer.slice(0, n))
+      } else if (n == -1) {
+        source.close
+
+        val nBytes = byteArrays.foldLeft(0) { (s, arr) => s + arr.length }
+        val ret = new Array[Byte](nBytes)
+        byteArrays.foldLeft(0) { (i, arr) => System.arraycopy(arr, 0, ret, i, arr.length); i + arr.length }
+        return ret
       }
     }
+
+    ???
   }
 
   /** Converts a BufferedImage to a BMP byte array.
@@ -96,29 +105,44 @@ class Tesseract(val options: TesseractOptions) {
     }
   }
 
+  private def inThread[A](f: => A): Future[A] = {
+    val promise = Promise[A]()
+
+    val thread = new Thread() {
+      override def run() = {
+        promise.success(f)
+      }
+    }
+    thread.setDaemon(true)
+    thread.start
+
+    promise.future
+  }
+
   /** Starts communicating with the process.
     *
     * Returns (stdout, stderr) pair.
     */
   private def sendInputAndReadOutputs(process: Process, input: Array[Byte])(implicit ec: ExecutionContext)
   : Future[(Array[Byte],Array[Byte])] = {
-    val stdout = new ByteArrayOutputStream
-    val stderr = new ByteArrayOutputStream
-
     // Send data to stdin
-    val stdinFuture = Future(blocking {
-      process.getOutputStream.write(input)
-      process.getOutputStream.close
-    })
+    val stdinFuture = inThread {
+      try {
+        process.getOutputStream.write(input)
+        process.getOutputStream.close
+      } catch {
+        case _: IOException => {} // "stream closed"
+      }
+    }
 
     // Read into stdout and stderr, in separate threads
-    val stdoutFuture = Future(blocking { drainStream(process.getInputStream, stdout) })
-    val stderrFuture = Future(blocking { drainStream(process.getErrorStream, stderr) })
+    val stdoutFuture = inThread { drainStream(process.getInputStream) }
+    val stderrFuture = inThread { drainStream(process.getErrorStream) }
 
     for {
       _ <- stdinFuture
-      _ <- stderrFuture
-      _ <- stdoutFuture
-    } yield (stdout.toByteArray, stderr.toByteArray)
+      stdout <- stdoutFuture
+      stderr <- stderrFuture
+    } yield (stdout, stderr)
   }
 }
