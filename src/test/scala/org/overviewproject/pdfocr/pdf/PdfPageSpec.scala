@@ -246,6 +246,7 @@ class PdfPageSpec extends UnitSpec {
       val pdf = load("owner-protected.pdf").futureValue
       val page = pdf.pages.next.futureValue
       page.toPdf.length mustNot equal(0) // really, we want no exception
+      pdf.close
     }
 
     // todo figure out whether there's a way to throw a PdfInvalidException
