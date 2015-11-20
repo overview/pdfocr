@@ -6,11 +6,10 @@ import java.awt.image.BufferedImage
 import java.io.{ByteArrayInputStream,ByteArrayOutputStream}
 import org.apache.pdfbox.cos.COSName
 import org.apache.pdfbox.pdmodel.{PDDocument,PDPage,PDPageContentStream}
-import org.apache.pdfbox.pdmodel.common.PDRectangle
+import org.apache.pdfbox.pdmodel.common.{PDMetadata,PDRectangle}
 import org.apache.pdfbox.pdmodel.font.PDFont
-import org.apache.pdfbox.pdmodel.interactive.action.PDActionGoTo
-import org.apache.pdfbox.pdmodel.interactive.annotation.{PDAnnotation,PDAnnotationLink}
-import org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.{PDDestination,PDPageDestination}
+import org.apache.pdfbox.pdmodel.interactive.action.PDPageAdditionalActions
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation
 import org.apache.pdfbox.io.MemoryUsageSetting
 import org.apache.pdfbox.rendering.{ImageType,PageDrawer,PageDrawerParameters,PDFRenderer}
 import org.apache.pdfbox.text.PDFTextStripper
@@ -149,6 +148,10 @@ class PdfPage(val pdfDocument: PdfDocument, val pdPage: PDPage, val pageNumber: 
     * Even if the original `pdDocument` is a single page, this method will
     * return a whole new page. (That's so we can avoid blocking re-reading the
     * original input file.)
+    *
+    * The purpose of this output PDF is *display*. (Another image format would
+    * be more ideal; we output PDF because we always have, not because we
+    * should.)
     */
   def toPdf: Array[Byte] = {
     // Mostly copied from pdfbox/.../multipdf/Splitter.java, but without the
@@ -165,21 +168,12 @@ class PdfPage(val pdfDocument: PdfDocument, val pdPage: PDPage, val pageNumber: 
       newPage.setResources(pdPage.getResources) // only the resources of the page will be copied
       newPage.setRotation(pdPage.getRotation)
 
-      // Remove links to pages, to avoid copying resources
-      // todo from pdfbox: preserve links to this page
-      iterableAsScalaIterable(newPage.getAnnotations).foreach { annotation =>
-        annotation.setPage(null)
-        annotation match {
-          case link: PDAnnotationLink => {
-            Option(link.getDestination).foreach(nixPage)
-            link.getAction match {
-              case goAction: PDActionGoTo => Option(goAction.getDestination).foreach(nixPage)
-              case _ => {}
-            }
-          }
-          case _ => {}
-        }
-      }
+      // Remove PDF features we don't "like". (We'd prefer PNG to PDF, so
+      // we should nix anything "dynamic", such as links, to save space and
+      // time.)
+      newPage.setAnnotations(null)
+      newPage.setActions(null)
+      newPage.setMetadata(null)
 
       val outputStream = new ByteArrayOutputStream
       newDocument.save(outputStream)
@@ -187,11 +181,6 @@ class PdfPage(val pdfDocument: PdfDocument, val pdPage: PDPage, val pageNumber: 
     } finally {
       newDocument.close
     }
-  }
-
-  private def nixPage(destination: PDDestination): Unit = destination match {
-    case pageDestination: PDPageDestination => pageDestination.setPage(null)
-    case _ =>
   }
 }
 

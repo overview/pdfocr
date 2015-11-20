@@ -223,7 +223,7 @@ class PdfPageSpec extends UnitSpec {
 
       val bytes = page.toPdf
 
-      bytes.length must equal(783) // Figured out by running the test
+      bytes.length must equal(772) // Figured out by running the test
       // Presumably, if this test fails you're editing the toPdf method to add
       // more stringent requirements. You should edit or nix this test when you
       // do.
@@ -237,7 +237,7 @@ class PdfPageSpec extends UnitSpec {
       val (document, page) = loadInvalidStreamPage
 
       val bytes = page.toPdf
-      bytes.length must equal(783) // Figured out by running the test
+      bytes.length must equal(772) // Figured out by running the test
 
       document.close
     }
