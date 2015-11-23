@@ -2,7 +2,7 @@
 
 name := "pdfocr"
 
-version := "0.0.1-SNAPSHOT"
+version := "0.0.1"
 
 homepage := Some(url("https://github.com/overview/pdfocr"))
 
@@ -21,8 +21,6 @@ fork in (Compile, run) := true // Main calls System.exit() to give proper return
 
 // Compile settings
 
-resolvers += "ApacheSnapshot" at "https://repository.apache.org/content/groups/snapshots/"
-
 scalaVersion := "2.11.7"
 
 scalacOptions += "-deprecation"
@@ -32,7 +30,7 @@ libraryDependencies ++= Seq(
   "org.bouncycastle" % "bcprov-jdk15" % "1.44", // https://pdfbox.apache.org/1.8/dependencies.html
   "com.github.jai-imageio" % "jai-imageio-core" % "1.3.0", // for TIFF support
   "com.levigo.jbig2" % "levigo-jbig2-imageio" % "1.6.1",
-  "org.apache.pdfbox" % "pdfbox" % "2.0.0-SNAPSHOT", // using local copy right now, pending fix for https://issues.apache.org/jira/browse/PDFBOX-3001
+  "org.apache.pdfbox" % "pdfbox" % "2.0.0-RC2",
   "org.scalatest" % "scalatest_2.11" % "2.2.4" % "test",
   "org.mockito" % "mockito-core" % "1.10.19" % "test",
   "org.slf4j" % "jcl-over-slf4j" % "1.7.12" % "test", // So we can mute warnings during testing
