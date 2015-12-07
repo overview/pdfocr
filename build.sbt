@@ -30,7 +30,7 @@ libraryDependencies ++= Seq(
   "org.bouncycastle" % "bcprov-jdk15" % "1.44", // https://pdfbox.apache.org/1.8/dependencies.html
   "com.github.jai-imageio" % "jai-imageio-core" % "1.3.0", // for TIFF support
   "com.github.jai-imageio" % "jai-imageio-jpeg2000" % "1.3.0", // for JPEG2000 support
-  "com.levigo.jbig2" % "levigo-jbig2-imageio" % "1.6.3",
+  "com.levigo.jbig2" % "levigo-jbig2-imageio" % "1.6.1",
   "org.apache.pdfbox" % "pdfbox" % "2.0.0-RC2",
   "org.scalatest" % "scalatest_2.11" % "2.2.4" % "test",
   "org.mockito" % "mockito-core" % "1.10.19" % "test",
