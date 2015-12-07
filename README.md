@@ -11,12 +11,12 @@ Then install this package. Maven-style:
     <dependency>
       <groupId>org.overviewproject</groupId>
       <artifactId>pdfocr_2.11</artifactId>
-      <version>0.0.1-SNAPSHOT</version>
+      <version>0.0.2</version>
     </dependency>
 
 Sbt-style:
 
-    dependencies += "org.overviewproject" %% "pdfocr" % "0.0.1-SNAPSHOT"
+    dependencies += "org.overviewproject" %% "pdfocr" % "0.0.2"
 
 Usage
 -----
