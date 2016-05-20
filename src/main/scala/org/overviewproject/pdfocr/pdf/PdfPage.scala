@@ -35,7 +35,7 @@ class PdfPage(val pdfDocument: PdfDocument, val pdPage: PDPage, val pageNumber: 
   private val pdDocument: PDDocument = pdfDocument.pdDocument
 
   /** Returns all the text we can read from the document. */
-  @throws(classOf[PdfInvalidException])
+  @throws(classOf[PdfInvalidException]) // Dunno if it can even throw this
   def toText: String = {
     val stripper = new PDFTextStripper
     stripper.setStartPage(pageNumber + 1)
