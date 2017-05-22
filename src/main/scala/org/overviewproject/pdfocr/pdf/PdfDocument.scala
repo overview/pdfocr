@@ -2,11 +2,12 @@ package org.overviewproject.pdfocr.pdf
 
 import java.io.{FileNotFoundException,IOException}
 import java.nio.file.{Files,Path}
+import org.apache.fontbox.ttf.{TTFParser,TrueTypeFont}
 import org.apache.pdfbox.io.MemoryUsageSetting
 import org.apache.pdfbox.pdfparser.PDFParser
 import org.apache.pdfbox.pdmodel.{PDDocument,PDPage}
 import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException
-import org.apache.pdfbox.pdmodel.font.PDType0Font
+import org.apache.pdfbox.pdmodel.font.{PDFont,PDType0Font}
 import scala.concurrent.{ExecutionContext,Future,blocking}
 
 import org.overviewproject.pdfocr.exceptions._
@@ -71,8 +72,8 @@ class PdfDocument(
     * This variable is initialized in `PdfPage.addHocr()`. If you never call
     * that method, this font will never be loaded.
     */
-  private[pdf] lazy val hocrFont: PDType0Font = {
-    val ret = PDType0Font.load(pdDocument, getClass.getResourceAsStream("/unifont-8.0.01.ttf"))
+  private[pdf] lazy val hocrFont: PDFont = {
+    val ret = PDType0Font.load(pdDocument, PdfDocument.Unifont, true)
     ret.getFontDescriptor.setFontName("pdfocr-ocr-text") // For PdfPage.isFromOcr()
     ret
   }
@@ -80,6 +81,11 @@ class PdfDocument(
 
 object PdfDocument {
   private val PdfParserMainMemoryBytes = 50 * 1024 * 1024;
+
+  private lazy val Unifont: TrueTypeFont = {
+    val parser = new TTFParser
+    parser.parse(getClass.getResourceAsStream("/pdfocr-stub-font.ttf"))
+  }
 
   private class PdfPageIterator(pdfDocument: PdfDocument)(implicit ec: ExecutionContext)
   extends Iterator[Future[PdfPage]] {

@@ -1,0 +1,17 @@
+{
+  "name": "the-all-font",
+  "version": "1.0.0",
+  "description": "Stub font",
+  "main": "index.js",
+  "keywords": [
+    "empty",
+    "ttf",
+    "font",
+    "generator"
+  ],
+  "author": "Adam Hooper <adam@adamhooper.com>",
+  "license": "AGPL-3.0",
+  "dependencies": {
+    "unicode-9.0.0": "^0.7.4"
+  }
+}

@@ -34,7 +34,11 @@ class PdfPage(val pdfDocument: PdfDocument, val pdPage: PDPage, val pageNumber: 
   private val MaxResolution: Int = 4000 // To ensure Tesseract finishes promptly. Picked by trying a few.
   private val pdDocument: PDDocument = pdfDocument.pdDocument
 
-  /** Returns all the text we can read from the document. */
+  /** Returns all the text we can read from the document.
+    *
+    * After you addHocr() and before you write the PDFDocument, toText() will
+    * have undefined behavior.
+    */
   @throws(classOf[PdfInvalidException]) // Dunno if it can even throw this
   def toText: String = {
     val stripper = new PDFTextStripper
@@ -109,6 +113,9 @@ class PdfPage(val pdfDocument: PdfDocument, val pdPage: PDPage, val pageNumber: 
     * This will only work with Tesseract 3.03's hOCR output. It assumes the
     * hOCR output uses the same resolution as returned by `bestDpi` -- that is,
     * the resolution of the `toImage` output.
+    *
+    * After you addHocr() and before you write the PDFDocument, toText() will
+    * have undefined behavior.
     */
   def addHocr(hocr: Array[Byte]): Unit = {
     val input = new ByteArrayInputStream(hocr)
@@ -205,10 +212,14 @@ object PdfPage {
     private var mustCloseStream = false
     private lazy val stream: PDPageContentStream = {
       mustCloseStream = true
-      val ret = new PDPageContentStream(pdfPage.pdDocument, pdfPage.pdPage, true, true, true)
+      val ret = new PDPageContentStream(
+        pdfPage.pdDocument,
+        pdfPage.pdPage,
+        PDPageContentStream.AppendMode.APPEND,
+        true,
+        true
+      )
       ret.beginText
-      ret.appendRawCommands("3 Tr ") // Set text invisible. No alternative; no way to silence deprecation warning
-                                        // TODO file bug for        ^^^        ^^ is https://issues.scala-lang.org/browse/SI-7934
       ret
     }
 

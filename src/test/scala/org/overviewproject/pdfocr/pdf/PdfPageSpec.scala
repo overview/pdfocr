@@ -103,7 +103,7 @@ class PdfPageSpec extends UnitSpec {
       }
     }
 
-    it("should return an 8-bit grayscale imaage") {
+    it("should return an 8-bit grayscale image") {
       /*
        * [adam] I don't normally write specs that just duplicate the actual
        * code. I added this one because without it, the next test wouldn't
@@ -271,10 +271,10 @@ class PdfPageSpec extends UnitSpec {
           <meta name='ocr-capabilities' content='ocr_page ocr_carea ocr_par ocr_line ocrx_word'/>
         </head>
         <body>
-          <div class='ocr_page' id='page_1' title='image "page.png"; bbox 0 0 100 200; ppageno 0'>
-            <div class='ocr_carea' id='block_1_4' title="bbox 0 0 100 200">
-              <p class='ocr_par' dir='ltr' id='par_1_4' title="bbox 0 0 100 200">
-                <span class='ocr_line' id='line_1_24' title="$title"><span class='ocrx_word' id='word_1_326' title='bbox 0 0 100 200' lang='eng' dir='ltr'>OCR!</span>
+          <div class='ocr_page' id='page_1' title='image "page.png"; bbox 0 0 200 100; ppageno 0'>
+            <div class='ocr_carea' id='block_1_4' title="bbox 0 0 200 100">
+              <p class='ocr_par' dir='ltr' id='par_1_4' title="bbox 0 0 200 100">
+                <span class='ocr_line' id='line_1_24' title="$title"><span class='ocrx_word' id='word_1_326' title='bbox 0 0 200 100' lang='eng' dir='ltr'>OCR!</span>
                 </span>
               </p>
             </div>
@@ -283,11 +283,16 @@ class PdfPageSpec extends UnitSpec {
       </html>
     """.getBytes("utf-8")
 
-    it("should add text to the page") {
+    it("should add text to the page", org.scalatest.tagobjects.Slow) {
       val (document, page) = helloWorld
 
       try {
         page.addHocr(hocr)
+
+        // Internal nonsense: PDDocument needs to subset() its PDFonts before
+        // the text extractor can grok them
+        document.pdDocument.save(new java.io.ByteArrayOutputStream)
+
         page.toText must equal("Hello, world!\nOCR!\n")
       } finally {
         document.close
