@@ -8,63 +8,69 @@ library shells out to it.
 
 Then install this package. Maven-style:
 
-    <dependency>
-      <groupId>org.overviewproject</groupId>
-      <artifactId>pdfocr_2.11</artifactId>
-      <version>0.0.2</version>
-    </dependency>
+```xml
+<dependency>
+  <groupId>org.overviewproject</groupId>
+  <artifactId>pdfocr_2.11</artifactId>
+  <version>0.0.2</version>
+</dependency>
+```
 
 Sbt-style:
 
-    dependencies += "org.overviewproject" %% "pdfocr" % "0.0.2"
+```scala
+dependencies += "org.overviewproject" %% "pdfocr" % "0.0.2"
+```
 
 Usage
 -----
 
 You've got to use Scala. Code something like this:
 
-    import java.nio.file.Path
-    import java.util.Locale
-    import org.overviewproject.pdfocr.{PdfOcr,PdfOcrProgress,PdfOcrResult}
-    import org.overviewproject.pdfocr.exceptions._
-    import scala.concurrent.Future
+```scala
+import java.nio.file.Path
+import java.util.Locale
+import org.overviewproject.pdfocr.{PdfOcr,PdfOcrProgress,PdfOcrResult}
+import org.overviewproject.pdfocr.exceptions._
+import scala.concurrent.Future
 
-    val pdfOcr = new PdfOcr()                          // default settings: finds tesseract in your $PATH
-    val inPdf = new Path("/path/to/needs-ocr.pdf")     // exists
-    val outPdf = new Path("/path/to/ocr-finished.pdf") // doesn't exist; will be deleted if it does
-    val process = PdfOcr.makePdfSearchable(inPdf, outPdf, Seq(Locale("en")))
+val pdfOcr = new PdfOcr()                          // default settings: finds tesseract in your $PATH
+val inPdf = new Path("/path/to/needs-ocr.pdf")     // exists
+val outPdf = new Path("/path/to/ocr-finished.pdf") // doesn't exist; will be deleted if it does
+val process = PdfOcr.makePdfSearchable(inPdf, outPdf, Seq(Locale("en")))
 
-    process.progress // Future[PdfOcrProgress]
-      .map { progress =>
-        // It's a Future because we don't know how many pages there are until
-        // we begin parsing the PDF, which takes time.
+process.progress // Future[PdfOcrProgress]
+  .map { progress =>
+    // It's a Future because we don't know how many pages there are until
+    // we begin parsing the PDF, which takes time.
 
-        progress.value       // 0.0 ... 1.0
-        progress.currentPage // 1 .. nPages
-        progress.nPages      // n
-      }
+    progress.value       // 0.0 ... 1.0
+    progress.currentPage // 1 .. nPages
+    progress.nPages      // n
+  }
 
-    process.result // Future[PdfTextResult]
-      .map { result =>
-        // do something with outPdf now...
+process.result // Future[PdfTextResult]
+  .map { result =>
+    // do something with outPdf now...
 
-        // Also, since the data is handy and would otherwise take a long time
-        // to compute, PdfOcr returns the text, in pages.
-        val text = result.pages.map(_.text).mkString("\n")
-      }
-      .recover {
-        // outPdf is guaranteed not to exist
+    // Also, since the data is handy and would otherwise take a long time
+    // to compute, PdfOcr returns the text, in pages.
+    val text = result.pages.map(_.text).mkString("\n")
+  }
+  .recover {
+    // outPdf is guaranteed not to exist
 
-        case TesseractMissingException => throw
-        case TesseractLanguageMissingException => throw
-        case EncryptedPdfException => throw
-        case InvalidPdfException => throw
-        // Other errors may happen -- PDFBox bugs, Tesseract bugs,
-        // out-of-memory.... You shouldn't catch those.
-      }
+    case TesseractMissingException => throw
+    case TesseractLanguageMissingException => throw
+    case EncryptedPdfException => throw
+    case InvalidPdfException => throw
+    // Other errors may happen -- PDFBox bugs, Tesseract bugs,
+    // out-of-memory.... You shouldn't catch those.
+  }
 
-    // Or if you got impatient, you could:
-    process.cancel // Future[Unit]
+// Or if you got impatient, you could:
+process.cancel // Future[Unit]
+```
 
 How PdfOcr behaves
 ------------------
