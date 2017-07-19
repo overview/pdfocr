@@ -2,7 +2,7 @@ package org.overviewproject.pdfocr.test
 
 import org.scalatest.{FunSpec,MustMatchers}
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.mockito.MockitoSugar
 import org.scalatest.time.{Span,Millis}
 
 abstract class UnitSpec extends FunSpec with MustMatchers with ScalaFutures with MockitoSugar {

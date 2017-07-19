@@ -14,7 +14,7 @@ import org.apache.pdfbox.io.MemoryUsageSetting
 import org.apache.pdfbox.rendering.{ImageType,PageDrawer,PageDrawerParameters,PDFRenderer}
 import org.apache.pdfbox.text.PDFTextStripper
 import org.apache.pdfbox.util.{Matrix,Vector}
-import scala.collection.JavaConversions.iterableAsScalaIterable
+import scala.collection.JavaConverters.iterableAsScalaIterableConverter
 
 import org.overviewproject.pdfocr.exceptions.PdfInvalidException
 
@@ -144,7 +144,7 @@ class PdfPage(val pdfDocument: PdfDocument, val pdPage: PDPage, val pageNumber: 
         option.getOrElse("")
       }
 
-      val pdFontNames = iterableAsScalaIterable(resources.getFontNames) // "/F1", "/F2", etc
+      val pdFontNames = iterableAsScalaIterableConverter(resources.getFontNames).asScala // "/F1", "/F2", etc
       pdFontNames.exists(cosName => getFontName(cosName) == "pdfocr-ocr-text")
     }
     case None => false

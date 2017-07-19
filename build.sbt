@@ -2,7 +2,7 @@
 
 name := "pdfocr"
 
-version := "0.0.2"
+version := "0.0.5"
 
 homepage := Some(url("https://github.com/overview/pdfocr"))
 
@@ -21,7 +21,9 @@ fork in (Compile, run) := true // Main calls System.exit() to give proper return
 
 // Compile settings
 
-scalaVersion := "2.11.7"
+scalaVersion := "2.12.2"
+
+crossScalaVersions := Seq("2.11.8", "2.12.2")
 
 scalacOptions += "-deprecation"
 
@@ -32,7 +34,7 @@ libraryDependencies ++= Seq(
   "com.github.jai-imageio" % "jai-imageio-jpeg2000" % "1.3.0", // for JPEG2000 support
   "com.levigo.jbig2" % "levigo-jbig2-imageio" % "1.6.5",
   "org.apache.pdfbox" % "pdfbox" % "2.0.6",
-  "org.scalatest" % "scalatest_2.11" % "2.2.6" % "test",
+  "org.scalatest" %% "scalatest" % "3.0.1" % "test",
   "org.mockito" % "mockito-core" % "1.10.19" % "test",
   "org.slf4j" % "jcl-over-slf4j" % "1.7.25" % "test", // So we can mute warnings during testing
   "org.slf4j" % "slf4j-simple" % "1.7.25" % "test"    // So we can mute warnings during testing
