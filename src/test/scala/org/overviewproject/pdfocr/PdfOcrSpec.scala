@@ -4,7 +4,7 @@ import java.awt.image.BufferedImage
 import java.io.FileNotFoundException
 import java.nio.file.{Files,Path,Paths}
 import java.util.Locale
-import org.mockito.Matchers.any
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.{never,when,verify}
 import org.scalatest.BeforeAndAfter
 import scala.concurrent.{ExecutionContext,Future}

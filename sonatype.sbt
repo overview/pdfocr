@@ -1,14 +1,15 @@
-pomExtra in Global := {
-  <scm>
-    <connection>scm:git:github.com/overview/pdfocr.git</connection>
-    <developerConnection>scm:git:git@github.com:overview/pdfocr.git</developerConnection>
-    <url>github.com/overview/pdfocr.git</url>
-  </scm>
-  <developers>
-    <developer>
-      <id>adam@adamhooper.com</id>
-      <name>Adam Hooper</name>
-      <url>http://adamhooper.com</url>
-    </developer>
-  </developers>
-}
+sonatypeProfileName := "org.overviewproject"
+
+publishMavenStyle := true
+
+licenses := Seq("AGPL3" -> url("http://www.gnu.org/licenses/agpl-3.0.txt"))
+
+homepage := Some(url("https://www.overviewdocs.com"))
+scmInfo := Some(ScmInfo(
+  url("https://github.com/overview/pdfocr"),
+  "scm:git@github.com:overview/pdfocr.git"
+))
+
+developers := List(
+  Developer(id="adam@adamhooper.com", name="Adam Hooper", email="adam@adamhooper.com", url=url("http://adamhooper.com"))
+)

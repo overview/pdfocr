@@ -103,7 +103,7 @@ We use [sbt-sonatype](https://github.com/xerial/sbt-sonatype for more details) f
 Setup: using the sbt-sonatype instructions, ensure you've done these things:
 
 * Created an account at https://oss.sonatype.org and get access to this project.
-* Created `~/.sbt/0.13/sonatype.sbt` with your credentials.
+* Created `~/.sbt/1.0/sonatype.sbt` with your credentials.
 
 Then, every new version:
 
