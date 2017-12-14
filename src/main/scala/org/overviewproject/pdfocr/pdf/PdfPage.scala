@@ -8,8 +8,9 @@ import org.apache.pdfbox.cos.COSName
 import org.apache.pdfbox.pdmodel.{PDDocument,PDPage,PDPageContentStream}
 import org.apache.pdfbox.pdmodel.common.{PDMetadata,PDRectangle}
 import org.apache.pdfbox.pdmodel.font.PDFont
+import org.apache.pdfbox.pdmodel.graphics.color.{PDColor,PDDeviceRGB}
 import org.apache.pdfbox.pdmodel.interactive.action.PDPageAdditionalActions
-import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLine
 import org.apache.pdfbox.io.MemoryUsageSetting
 import org.apache.pdfbox.rendering.{ImageType,PageDrawer,PageDrawerParameters,PDFRenderer}
 import org.apache.pdfbox.text.PDFTextStripper
@@ -126,26 +127,42 @@ class PdfPage(val pdfDocument: PdfDocument, val pdPage: PDPage, val pageNumber: 
     parser.foreach(handler.renderLine)
 
     handler.close
+
+    // Add an invisible LINE annotation with RBB 0xd0cd0c.
+    // split-pdf-and-extract-text will recognize it as an OCR flag.
+    val ocrAnnotation = new PDAnnotationLine()
+    ocrAnnotation.setHidden(true)
+    ocrAnnotation.setInvisible(true)
+    ocrAnnotation.setRectangle(new PDRectangle(0, 0, 0, 0))
+    ocrAnnotation.setColor(new PDColor(
+      Array(0xd0, 0xcd, 0x0c).map(_ / 255.0f),
+      PDDeviceRGB.INSTANCE)
+    )
+
+    val annotations = pdPage.getAnnotations()
+    annotations.add(ocrAnnotation)
+    pdPage.setAnnotations(annotations)
   }
 
-  /** Returns true iff some of this text has a "pdfocr-ocr-text" font.
+  /** Returns true iff there is a /Line annotation with RGB 0xd0cd0c.
     *
-    * Does not throw an exception on an invalid PDF.
+    * (Perhaps cleaner would be to check for our font. But pdfium does not
+    * give an interface for reading fonts yet, and we want our pdfium-based
+    * splitter to recognize this mark.)
     */
-  def isFromOcr: Boolean = Option(pdPage.getResources) match {
-    case Some(resources) => {
-      def getFontName(cosName: COSName): String = {
-        val option = for {
-          font <- Option(resources.getFont(cosName))
-          descriptor <- Option(font.getFontDescriptor)
-          name <- Option(descriptor.getFontName)
-        } yield name
-
-        option.getOrElse("")
+  def isFromOcr: Boolean = Option(pdPage.getAnnotations) match {
+    case Some(annotations) => {
+      annotations.size match {
+        case 0 => false
+        case _ => {
+          val annot = annotations.get(annotations.size - 1)
+          return (
+            (annot.getAnnotationFlags & 0x3) == 0x3
+            && annot.getSubtype == "Line"
+            && annot.getColor.toRGB == 0xd0cd0c
+          )
+        }
       }
-
-      val pdFontNames = iterableAsScalaIterableConverter(resources.getFontNames).asScala // "/F1", "/F2", etc
-      pdFontNames.exists(cosName => getFontName(cosName) == "pdfocr-ocr-text")
     }
     case None => false
   }
