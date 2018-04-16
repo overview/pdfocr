@@ -2,7 +2,7 @@
 
 name := "pdfocr"
 
-version := "0.0.7"
+version := "0.0.8"
 
 homepage := Some(url("https://github.com/overview/pdfocr"))
 
