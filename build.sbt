@@ -34,7 +34,7 @@ libraryDependencies ++= Seq(
   "com.github.jai-imageio" % "jai-imageio-core" % "1.3.1", // for TIFF support
   "com.github.jai-imageio" % "jai-imageio-jpeg2000" % "1.3.0", // for JPEG2000 support
   "com.levigo.jbig2" % "levigo-jbig2-imageio" % "2.0",
-  "org.apache.pdfbox" % "pdfbox" % "2.0.8",
+  "org.apache.pdfbox" % "pdfbox" % "2.0.9",
   "org.scalatest" %% "scalatest" % "3.0.4" % "test",
   "org.mockito" % "mockito-core" % "2.12.0" % "test",
   "org.slf4j" % "jcl-over-slf4j" % "1.7.25" % "test", // So we can mute warnings during testing
