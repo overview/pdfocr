@@ -3,7 +3,7 @@ Use Tesseract to make a PDF searchable.
 Installation
 ------------
 
-Install [Tesseract](https://github.com/tesseract-ocr/tesseract) v3.0.4. This
+Install [Tesseract](https://github.com/tesseract-ocr/tesseract) v3.0.5. This
 library shells out to it.
 
 Then install this package. Maven-style:
@@ -11,15 +11,15 @@ Then install this package. Maven-style:
 ```xml
 <dependency>
   <groupId>org.overviewproject</groupId>
-  <artifactId>pdfocr_2.11</artifactId>
-  <version>0.0.2</version>
+  <artifactId>pdfocr_2.12</artifactId>
+  <version>0.0.10</version>
 </dependency>
 ```
 
 Sbt-style:
 
 ```scala
-dependencies += "org.overviewproject" %% "pdfocr" % "0.0.2"
+dependencies += "org.overviewproject" %% "pdfocr" % "0.0.10"
 ```
 
 Usage
@@ -115,5 +115,5 @@ If the version ends in `-SNAPSHOT`, you won't be able to release it.
 License
 -------
 
-This software is Copyright 2011-2014 The Associated Press, and distributed under the
+This software is Copyright 2011-2018 The Associated Press, and distributed under the
 terms of the GNU Affero General Public License. See the LICENSE file for details.
