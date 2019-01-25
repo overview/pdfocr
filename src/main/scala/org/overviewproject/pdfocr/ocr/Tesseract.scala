@@ -93,9 +93,10 @@ class Tesseract(val options: TesseractOptions) {
       try {
         val processBuilder = new ProcessBuilder(
           options.tesseractPath,
-          "-", "-",
           "-l", languages.map(_.getISO3Language).mkString("+"), // Languages
-          "-psm", "1",                                          // Page segmentation + orientation/script detection
+          "--psm", "1",                                         // Page segmentation + orientation/script detection
+          "--oem", "1",                                         // LTSM engine (Tesseract 4.0)
+          "-", "-",                                             // stdin, stdout
           "hocr"
         )
         processBuilder.start

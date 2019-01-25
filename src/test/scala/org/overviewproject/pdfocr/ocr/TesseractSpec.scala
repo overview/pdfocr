@@ -17,12 +17,12 @@ class TesseractSpec extends UnitSpec {
 
   it("shells to Tesseract and collects stderr") {
     val result = tesseract.ocr(image, Seq(new Locale("en"))).futureValue
-    new String(result.standardError, "utf-8") must equal("- - -l eng -psm 1 hocr\n")
+    new String(result.standardError, "utf-8") must equal("-l eng --psm 1 --oem 1 - - hocr\n")
   }
 
   it("concatenates languages using +") {
     val result = tesseract.ocr(image, Seq(new Locale("en"), new Locale("fr"))).futureValue
-    new String(result.standardError, "utf-8") must equal("- - -l eng+fra -psm 1 hocr\n")
+    new String(result.standardError, "utf-8") must equal("-l eng+fra --psm 1 --oem 1 - - hocr\n")
   }
 
   it("sends Tesseract the image as BMP") {

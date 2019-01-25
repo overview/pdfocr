@@ -4,14 +4,14 @@
 #
 # Spits out its invocation to stderr, then spits out its input to stdout.
 #
-# Special language values ($4) cause special results:
+# Special language values ($2) cause special results:
 #
 # * "zxx": retval 1, missing-language warning to stderr
 # * "osd": retval 0, missing-language warning to stderr
 # * "und": retval 1, other error message
 
 
-case "$4" in
+case "$2" in
   osd)
     # Put dummy data above and below the language message we grep for
     echo "blah" >&2

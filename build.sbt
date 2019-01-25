@@ -2,7 +2,7 @@
 
 name := "pdfocr"
 
-version := "0.0.10"
+version := "0.0.11"
 
 homepage := Some(url("https://github.com/overview/pdfocr"))
 
@@ -21,18 +21,18 @@ fork in (Compile, run) := true // Main calls System.exit() to give proper return
 
 // Compile settings
 
-scalaVersion := "2.12.6"
+scalaVersion := "2.12.8"
 
 scalacOptions += "-deprecation"
 
 libraryDependencies ++= Seq(
-  "org.bouncycastle" % "bcmail-jdk15on" % "1.59", // https://pdfbox.apache.org/2.0/dependencies.html
-  "org.bouncycastle" % "bcprov-jdk15on" % "1.59", // https://pdfbox.apache.org/2.0/dependencies.html
-  "org.bouncycastle" % "bcpkix-jdk15on" % "1.59", // https://pdfbox.apache.org/2.0/dependencies.html
+  "org.bouncycastle" % "bcmail-jdk15on" % "1.60", // https://pdfbox.apache.org/2.0/dependencies.html
+  "org.bouncycastle" % "bcprov-jdk15on" % "1.60", // https://pdfbox.apache.org/2.0/dependencies.html
+  "org.bouncycastle" % "bcpkix-jdk15on" % "1.60", // https://pdfbox.apache.org/2.0/dependencies.html
   "com.github.jai-imageio" % "jai-imageio-core" % "1.4.0", // for TIFF support
   "com.github.jai-imageio" % "jai-imageio-jpeg2000" % "1.3.0", // for JPEG2000 support
   "org.apache.pdfbox" % "jbig2-imageio" % "3.0.0",
-  "org.apache.pdfbox" % "pdfbox" % "2.0.9",
+  "org.apache.pdfbox" % "pdfbox" % "2.0.13",
   "org.scalatest" %% "scalatest" % "3.0.5" % "test",
   "org.mockito" % "mockito-core" % "2.18.3" % "test",
   "org.slf4j" % "jcl-over-slf4j" % "1.7.25" % "test", // So we can mute warnings during testing
