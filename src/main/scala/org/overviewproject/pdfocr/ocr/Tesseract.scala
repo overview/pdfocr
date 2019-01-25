@@ -99,6 +99,7 @@ class Tesseract(val options: TesseractOptions) {
           "-", "-",                                             // stdin, stdout
           "hocr"
         )
+        processBuilder.environment.put("OMP_THREAD_LIMIT", "1")
         processBuilder.start
       } catch {
         case e: IOException => throw new TesseractMissingException(e)
